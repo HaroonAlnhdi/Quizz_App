@@ -28,10 +28,9 @@ class _SignupViewState extends State<SignupView> {
                 const SizedBox(height: 80),
                 const SizedBox(
                   width: 150,
-                  height: 150,
                   child: Image(image: AssetImage('assets/logo.png')),
                 ),
-                const SizedBox(height: 20),
+
                 const Align(
                   alignment: Alignment.center,
                   child: Text(
@@ -58,6 +57,12 @@ class _SignupViewState extends State<SignupView> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your first name';
                     }
+                    if (value.length > 30) {
+                      return 'First name cannot be longer than 30 characters';
+                    }
+                    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                      return 'First name can only contain letters';
+                    }
                     return null;
                   },
                 ),
@@ -75,6 +80,12 @@ class _SignupViewState extends State<SignupView> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your last name';
+                    }
+                    if (value.length > 30) {
+                      return 'Last name cannot be longer than 30 characters';
+                    }
+                    if (!RegExp(r'^[a-zA-Z]+$').hasMatch(value)) {
+                      return 'Last name can only contain letters';
                     }
                     return null;
                   },
@@ -163,9 +174,7 @@ class _SignupViewState extends State<SignupView> {
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
-                 const SizedBox(height: 20),
-
-
+                const SizedBox(height: 20),
                 const Align(
                   alignment: Alignment.center,
                   child: Text(
@@ -177,7 +186,7 @@ class _SignupViewState extends State<SignupView> {
                     ),
                   ),
                 ),
-                 InkWell(
+                InkWell(
                   onTap: () {
                     Navigator.pushNamed(context, '/login');
                   },
