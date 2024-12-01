@@ -97,7 +97,7 @@ class _LoginViewState extends State<LoginView> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                )
+                ),
            
             ],
           ),
