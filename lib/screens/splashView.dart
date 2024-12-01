@@ -14,7 +14,7 @@ class SplashView extends StatelessWidget {
     return const Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Image(image: AssetImage('assets/qq.jpg')),
+        child: Image(image: AssetImage('assets/logo.png')),
       ),
     );
   }
