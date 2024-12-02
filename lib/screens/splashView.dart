@@ -9,7 +9,7 @@ class SplashView extends StatelessWidget {
   Widget build(BuildContext context) {
     Timer(const Duration( seconds: 2 ), () 
     {
-      Navigator.pushReplacementNamed(context, '/login',);
+      Navigator.pushReplacementNamed(context, '/auth',);
     });
     return const Scaffold(
       backgroundColor: Colors.white,
