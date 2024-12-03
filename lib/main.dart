@@ -7,6 +7,7 @@ import 'package:quiz_app/screens/SignupView.dart';
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
+import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -31,6 +32,7 @@ class MainApp extends StatelessWidget {
         '/login': (context) => const LoginView(),
         '/signup': (context) => const SignupView(),
         '/homeAdmin': (context) => const HomeViewAdmin(),
+        '/homeStudent':(context) => const HomeViewStudent(),
       },
     );
   }
