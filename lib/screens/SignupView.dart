@@ -17,8 +17,19 @@ class _SignupViewState extends State<SignupView> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
- Future<void> signup() async {
+Future<void> signup() async {
     if (_formKey.currentState!.validate()) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        },
+      );
+
       try {
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
@@ -32,13 +43,18 @@ class _SignupViewState extends State<SignupView> {
           'role': 'student',
         });
 
-        // Navigate to another screen or show a success message
-          ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signup successful! Please log in.'), backgroundColor:Colors.green ,),
+           // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signup successful! Please log in.'), backgroundColor: Colors.green),
         );
+
+        // Navigate to login page
         Navigator.pushNamed(context, '/login');
       } on FirebaseAuthException catch (e) {
-        // Handle error
+        // Dismiss loading dialog
+        Navigator.of(context).pop();
+
+        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? 'An error occurred'), backgroundColor: Colors.red),
         );
