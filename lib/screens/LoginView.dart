@@ -38,10 +38,21 @@ class _LoginViewState extends State<LoginView> {
         }
 
       } on FirebaseAuthException catch (e) {
-      //  Handel error 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Login failed')),
-        );
+       String errorMessage;
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'No user found with this email. Please check your credentials.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This user account has been disabled. Please contact support.';
+          break;
+        default:
+          errorMessage = 'Login failed. email or password is wrong .';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage) , backgroundColor: Colors.red),
+      );
       } finally {
         setState(() {
           _isLoading = false;
