@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:quiz_app/screens/admin/CreateExamPage.dart';
+// import 'package:quiz_app/screens/admin/QuizsListPage.dart';
 
 class HomeViewAdmin extends StatefulWidget {
   const HomeViewAdmin({super.key});
@@ -184,7 +185,76 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
-                          // Add more cards as needed
+
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/QuizsListPage');
+                            },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: Colors.orange,
+                              child: const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.list,
+                                          color: Colors.white, size: 50),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        'Quizs List',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          GestureDetector(
+                            onTap: () {
+                              _auth.signOut();
+                              Navigator.pushNamed(context, '/login');
+                            },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: Colors.red,
+                              child: const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.logout,
+                                          color: Colors.white, size: 50),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        'Logout',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+
                         ],
                       ),
                     ],
@@ -194,7 +264,8 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
             },
           ),
           CreateExamPage(),
-          Center(child: Text('Profile Page')), // Placeholder for Profile Page
+          
+          Center(child: Text('Profile Page')), 
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
