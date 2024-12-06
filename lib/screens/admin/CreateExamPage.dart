@@ -23,84 +23,19 @@ class _CreateExamPageState extends State<CreateExamPage> {
   bool _isLoading = false;
   int _currentStep = 0;
 
+    String questionType = 'MCQ'; // Default type
+  final TextEditingController questionController = TextEditingController();
+  final TextEditingController optionAController = TextEditingController();
+  final TextEditingController optionBController = TextEditingController();
+  final TextEditingController optionCController = TextEditingController();
+  final TextEditingController optionDController = TextEditingController();
+  final TextEditingController correctOptionController = TextEditingController();
+  bool isTrue = true;
+  bool showForm = false;
+
   String? _getUserEmail() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.email;
-  }
-
-  void _addQuestion() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final TextEditingController questionController =
-            TextEditingController();
-        final TextEditingController optionAController = TextEditingController();
-        final TextEditingController optionBController = TextEditingController();
-        final TextEditingController optionCController = TextEditingController();
-        final TextEditingController optionDController = TextEditingController();
-        final TextEditingController correctOptionController =
-            TextEditingController();
-
-        return AlertDialog(
-          title: const Text('Add Question'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: questionController,
-                  decoration: const InputDecoration(labelText: 'Question Text'),
-                ),
-                TextField(
-                  controller: optionAController,
-                  decoration: const InputDecoration(labelText: 'Option A'),
-                ),
-                TextField(
-                  controller: optionBController,
-                  decoration: const InputDecoration(labelText: 'Option B'),
-                ),
-                TextField(
-                  controller: optionCController,
-                  decoration: const InputDecoration(labelText: 'Option C'),
-                ),
-                TextField(
-                  controller: optionDController,
-                  decoration: const InputDecoration(labelText: 'Option D'),
-                ),
-                TextField(
-                  controller: correctOptionController,
-                  decoration:
-                      const InputDecoration(labelText: 'Correct Option'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _questions.add({
-                    'text': questionController.text,
-                    'options': [
-                      optionAController.text,
-                      optionBController.text,
-                      optionCController.text,
-                      optionDController.text,
-                    ],
-                    'correctOption': correctOptionController.text,
-                  });
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('Add'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<void> _createExam() async {
@@ -118,19 +53,27 @@ class _CreateExamPageState extends State<CreateExamPage> {
           'startTime': _startTimeController.text,
           'endTime': _endTimeController.text,
           'submissionLimit': int.tryParse(_submissionLimitController.text) ?? 1,
-          'questions': _questions.map((q) => q['text']).toList(),
+          // 'questions': _questions.map((q) => q['id']).toList(),
           'createdAt': Timestamp.now(),
         });
 
+        List<String> questionIds = [];
         for (var question in _questions) {
           await FirebaseFirestore.instance.collection('Questions').add({
             'examId': examDoc.id,
             ...question,
           });
+          questionIds.add(question['id']);
         }
 
+        // Update the exam document with the question IDs
+        await FirebaseFirestore.instance.collection('Exams').doc(examDoc.id).update({
+          'questions': questionIds,
+        });
+
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exam created successfully!')),
+          const SnackBar(content: Text('Exam created successfully!') , backgroundColor: Colors.green),
         );
 
         _formKey.currentState?.reset();
@@ -139,7 +82,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
         });
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating exam: $e')),
+          SnackBar(content: Text('Error creating exam: $e'), backgroundColor: Colors.red),
         );
       } finally {
         setState(() {
@@ -166,7 +109,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AdminAppBar(title: 'Create Exam'),
+      appBar: const AdminAppBar(title: 'Create Exam'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stepper(
@@ -197,18 +140,24 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     if (_currentStep > 0)
                       TextButton(
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(Color.fromARGB(255, 179, 120, 224)),
+                          backgroundColor: MaterialStateProperty.all(
+                              Color.fromARGB(255, 179, 120, 224)),
                         ),
                         onPressed: details.onStepCancel,
-                        child: const Text('Back' , style: TextStyle(color: Colors.white),),
+                        child: const Text(
+                          'Back',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
-                      SizedBox(width: 1),
+                    SizedBox(width: 1),
                     ElevatedButton(
                       onPressed: details.onStepContinue,
-                      child: Text(_currentStep == 1 ? 'Create Exam' : 'Next' , style: const TextStyle(color: Colors.white),),
+                      child: Text(
+                        _currentStep == 1 ? 'Create Exam' : 'Next',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
-                       backgroundColor: Color(0xFF7826B5),
-
+                        backgroundColor: Color(0xFF7826B5),
                       ),
                     ),
                   ],
@@ -298,11 +247,6 @@ class _CreateExamPageState extends State<CreateExamPage> {
                   title: const Text('Add Questions'),
                   content: Column(
                     children: [
-                      ElevatedButton(
-                        onPressed: _addQuestion,
-                        child: const Text('Add Question'),
-                      ),
-                      const SizedBox(height: 16),
                       ListView.builder(
                         shrinkWrap: true,
                         itemCount: _questions.length,
@@ -310,7 +254,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           return ListTile(
                             title: Text(_questions[index]['text']),
                             subtitle: Text(
-                                'Options: ${_questions[index]['options'].join(', ')}'),
+                                'Type: ${_questions[index]['type']}, Options: ${_questions[index]['options']?.join(', ')}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -333,6 +277,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                           );
                         },
                       ),
+                      const SizedBox(height: 16),
+                      _buildQuestionForm(),
                     ],
                   ),
                   isActive: _currentStep >= 1,
@@ -341,6 +287,137 @@ class _CreateExamPageState extends State<CreateExamPage> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildQuestionForm() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+        const Text('Add Question', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+        const SizedBox(width: 16),
+        DropdownButton<String>(
+          borderRadius: BorderRadius.circular(8),
+          dropdownColor: Colors.white,
+          // isExpanded: true,
+          value: questionType,
+          items: ['MCQ', 'Text', 'True/False'].map((type) {
+            return DropdownMenuItem(
+              value: type,
+              child: Text(type),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              questionType = value!;
+              showForm = true;
+            });
+          },
+        ),
+          ],
+        ),
+         const SizedBox(height: 16),
+        Visibility(
+          visible: showForm,
+          child: Column(
+            children: [
+              TextField(
+                controller: questionController,
+                decoration: const InputDecoration(labelText: 'Question Text'),
+              ),
+              if (questionType == 'MCQ') ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: optionAController,
+                  decoration: const InputDecoration(labelText: 'Option A'),
+                ),
+                TextField(
+                  controller: optionBController,
+                  decoration: const InputDecoration(labelText: 'Option B'),
+                ),
+                TextField(
+                  controller: optionCController,
+                  decoration: const InputDecoration(labelText: 'Option C'),
+                ),
+                TextField(
+                  controller: optionDController,
+                  decoration: const InputDecoration(labelText: 'Option D'),
+                ),
+                TextField(
+                  controller: correctOptionController,
+                  decoration: const InputDecoration(labelText: 'Correct Option'),
+                ),
+              ],
+              if (questionType == 'Text') ...[
+                const SizedBox(height: 16),
+                TextField(
+                  controller: correctOptionController,
+                  decoration: const InputDecoration(labelText: 'Answer Text'),
+                ),
+              ],
+              if (questionType == 'True/False') ...[
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Is the answer True?'),
+                  value: isTrue,
+                  onChanged: (value) {
+                    setState(() {
+                      isTrue = value;
+                    });
+                  },
+                ),
+              ],
+              Row(
+                children: [
+                   ElevatedButton(
+                onPressed: (){
+
+                  setState(() {
+                    showForm = false;
+                  });
+                },
+                 child: const Text('cancel'
+                 
+                 ),
+              ),
+              const SizedBox(width: 100),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _questions.add({
+                          'id': UniqueKey().toString(),
+                          'text': questionController.text,
+                          'type': questionType,
+                          'options': questionType == 'MCQ'
+                              ? [
+                                  optionAController.text,
+                                  optionBController.text,
+                                  optionCController.text,
+                                  optionDController.text
+                                ]
+                              : null,
+                          'correctOption': questionType == 'MCQ'
+                              ? correctOptionController.text
+                              : (questionType == 'True/False'
+                                  ? isTrue.toString()
+                                  : correctOptionController.text),
+                        });
+                        showForm = false;
+                      });
+                    },
+                    child: const Text('Add Question'),
+                  ),
+
+                  
+                ],
+              ),
+             
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
