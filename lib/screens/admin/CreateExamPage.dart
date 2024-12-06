@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:quiz_app/screens/admin/AdminFooter.dart';
 
 class CreateExamPage extends StatefulWidget {
   const CreateExamPage({super.key});
@@ -19,6 +17,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
   final TextEditingController _submissionLimitController = TextEditingController();
+    final TextEditingController _quizDateController = TextEditingController();
   final List<Map<String, dynamic>> _questions = [];
   bool _isLoading = false;
   int _currentStep = 0;
@@ -52,6 +51,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
           'startTime': _startTimeController.text,
           'endTime': _endTimeController.text,
           'submissionLimit': int.tryParse(_submissionLimitController.text) ?? 1,
+          'quizDate': _quizDateController.text,
           'createdAt': Timestamp.now(),
         });
 
@@ -166,7 +166,11 @@ class _CreateExamPageState extends State<CreateExamPage> {
                       children: [
                         TextFormField(
                           controller: _titleController,
-                          decoration: const InputDecoration(labelText: 'Exam Title'),
+                          decoration: const InputDecoration(
+                            labelText: 'Exam Title',
+                            prefixIcon: Icon(Icons.title),
+                            border: OutlineInputBorder(),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a title';
@@ -174,9 +178,14 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _descriptionController,
-                          decoration: const InputDecoration(labelText: 'Description'),
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            prefixIcon: Icon(Icons.description),
+                            border: OutlineInputBorder(),
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a description';
@@ -184,9 +193,14 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _startTimeController,
-                          decoration: const InputDecoration(labelText: 'Start Time'),
+                          decoration: const InputDecoration(
+                            labelText: 'Start Time',
+                            prefixIcon: Icon(Icons.access_time),
+                            border: OutlineInputBorder(),
+                          ),
                           readOnly: true,
                           onTap: () => _selectTime(context, _startTimeController),
                           validator: (value) {
@@ -196,9 +210,14 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _endTimeController,
-                          decoration: const InputDecoration(labelText: 'End Time'),
+                          decoration: const InputDecoration(
+                            labelText: 'End Time',
+                            prefixIcon: Icon(Icons.access_time),
+                            border: OutlineInputBorder(),
+                          ),
                           readOnly: true,
                           onTap: () => _selectTime(context, _endTimeController),
                           validator: (value) {
@@ -208,9 +227,14 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _submissionLimitController,
-                          decoration: const InputDecoration(labelText: 'Submission Limit'),
+                          decoration: const InputDecoration(
+                            labelText: 'Submission Limit',
+                            prefixIcon: Icon(Icons.format_list_numbered),
+                            border: OutlineInputBorder(),
+                          ),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -222,6 +246,34 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             return null;
                           },
                         ),
+                       const SizedBox(height: 15),
+                         TextFormField(
+                          controller: _quizDateController, // New field
+                          decoration: const InputDecoration(
+                            labelText: 'Quiz Date',
+                            prefixIcon: Icon(Icons.calendar_today),
+                            border: OutlineInputBorder(),
+                          ),
+                          readOnly: true,
+                          onTap: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2101),
+                            );
+                            if (pickedDate != null) {
+                              _quizDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+                            }
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a quiz date';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -307,36 +359,68 @@ class _CreateExamPageState extends State<CreateExamPage> {
             children: [
               TextField(
                 controller: questionController,
-                decoration: const InputDecoration(labelText: 'Question Text'),
+                decoration: const InputDecoration(
+                  labelText: 'Question Text',
+                  prefixIcon: Icon(Icons.question_answer),
+                  border: OutlineInputBorder(),
+                ),
               ),
               if (questionType == 'MCQ') ...[
                 const SizedBox(height: 16),
                 TextField(
                   controller: optionAController,
-                  decoration: const InputDecoration(labelText: 'Option A'),
+                  decoration: const InputDecoration(
+                    labelText: 'Option A',
+                    prefixIcon: Icon(Icons.looks_one),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: optionBController,
-                  decoration: const InputDecoration(labelText: 'Option B'),
+                  decoration: const InputDecoration(
+                    labelText: 'Option B',
+                    prefixIcon: Icon(Icons.looks_two),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: optionCController,
-                  decoration: const InputDecoration(labelText: 'Option C'),
+                  decoration: const InputDecoration(
+                    labelText: 'Option C',
+                    prefixIcon: Icon(Icons.looks_3),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: optionDController,
-                  decoration: const InputDecoration(labelText: 'Option D'),
+                  decoration: const InputDecoration(
+                    labelText: 'Option D',
+                    prefixIcon: Icon(Icons.looks_4),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: correctOptionController,
-                  decoration: const InputDecoration(labelText: 'Correct Option'),
+                  decoration: const InputDecoration(
+                    labelText: 'Correct Option',
+                    prefixIcon: Icon(Icons.check),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
               if (questionType == 'Text') ...[
                 const SizedBox(height: 16),
                 TextField(
                   controller: correctOptionController,
-                  decoration: const InputDecoration(labelText: 'Answer Text'),
+                  decoration: const InputDecoration(
+                    labelText: 'Answer Text',
+                    prefixIcon: Icon(Icons.text_fields),
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
               if (questionType == 'True/False') ...[
@@ -351,7 +435,9 @@ class _CreateExamPageState extends State<CreateExamPage> {
                   },
                 ),
               ],
+              const SizedBox(height: 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ElevatedButton(
                     onPressed: () {
@@ -360,8 +446,10 @@ class _CreateExamPageState extends State<CreateExamPage> {
                       });
                     },
                     child: const Text('Cancel'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
                   ),
-                  const SizedBox(width: 100),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -385,6 +473,9 @@ class _CreateExamPageState extends State<CreateExamPage> {
                       });
                     },
                     child: const Text('Add Question'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
                   ),
                 ],
               ),
