@@ -371,6 +371,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
     ),
     const SizedBox(height: 16),
     _buildQuestionForm(),
+    const SizedBox(height: 20),
   ],
 ),
                   isActive: _currentStep >= 1,
@@ -388,6 +389,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            Container(),
             const Text('Add Question :',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(width: 16),
@@ -421,135 +423,142 @@ class _CreateExamPageState extends State<CreateExamPage> {
         const SizedBox(height: 16),
         Visibility(
           visible: showForm,
-          child: Column(
-            children: [
-              TextField(
-                controller: questionController,
-                decoration: const InputDecoration(
-                  labelText: 'Question Text',
-                  prefixIcon: Icon(Icons.question_answer),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              if (questionType == 'MCQ') ...[
-                const SizedBox(height: 16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
                 TextField(
-                  controller: optionAController,
+                  controller: questionController,
                   decoration: const InputDecoration(
-                    labelText: 'Option A',
-                    prefixIcon: Icon(Icons.looks_one),
+                    labelText: 'Question Text',
+                    prefixIcon: Icon(Icons.question_answer),
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: optionBController,
-                  decoration: const InputDecoration(
-                    labelText: 'Option B',
-                    prefixIcon: Icon(Icons.looks_two),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: optionCController,
-                  decoration: const InputDecoration(
-                    labelText: 'Option C',
-                    prefixIcon: Icon(Icons.looks_3),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: optionDController,
-                  decoration: const InputDecoration(
-                    labelText: 'Option D',
-                    prefixIcon: Icon(Icons.looks_4),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: correctOptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Correct Option',
-                    prefixIcon: Icon(Icons.check),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-              if (questionType == 'Text') ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: correctOptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Answer Text',
-                    prefixIcon: Icon(Icons.text_fields),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-              if (questionType == 'True/False') ...[
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: const Text('Is the answer True?'),
-                  value: isTrue,
-                  onChanged: (value) {
-                    setState(() {
-                      isTrue = value;
-                    });
-                  },
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showForm = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                if (questionType == 'MCQ') ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: optionAController,
+                    decoration: const InputDecoration(
+                      labelText: 'Option A',
+                      prefixIcon: Icon(Icons.looks_one),
+                      border: OutlineInputBorder(),
                     ),
-                    child: const Text('Cancel',
-                        style: TextStyle(color: Colors.white)),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _questions.add({
-                          'id': UniqueKey().toString(),
-                          'text': questionController.text,
-                          'type': questionType,
-                          'options': questionType == 'MCQ'
-                              ? [
-                                  optionAController.text,
-                                  optionBController.text,
-                                  optionCController.text,
-                                  optionDController.text
-                                ]
-                              : null,
-                          'correctOption': questionType == 'MCQ'
-                              ? correctOptionController.text
-                              : (questionType == 'True/False'
-                                  ? isTrue.toString()
-                                  : correctOptionController.text),
-                        });
-                        showForm = false;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: optionBController,
+                    decoration: const InputDecoration(
+                      labelText: 'Option B',
+                      prefixIcon: Icon(Icons.looks_two),
+                      border: OutlineInputBorder(),
                     ),
-                    child: const Text('Add Question',
-                        style: TextStyle(color: Colors.white)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: optionCController,
+                    decoration: const InputDecoration(
+                      labelText: 'Option C',
+                      prefixIcon: Icon(Icons.looks_3),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: optionDController,
+                    decoration: const InputDecoration(
+                      labelText: 'Option D',
+                      prefixIcon: Icon(Icons.looks_4),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: correctOptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Correct Option',
+                      prefixIcon: Icon(Icons.check),
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ],
-              ),
-            ],
+                if (questionType == 'Text') ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: correctOptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Answer Text',
+                      prefixIcon: Icon(Icons.text_fields),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+                if (questionType == 'True/False') ...[
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Is the answer True?'),
+                    value: isTrue,
+                    onChanged: (value) {
+                      setState(() {
+                        isTrue = value;
+                      });
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          showForm = false;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _questions.add({
+                            'id': UniqueKey().toString(),
+                            'text': questionController.text,
+                            'type': questionType,
+                            'options': questionType == 'MCQ'
+                                ? [
+                                    optionAController.text,
+                                    optionBController.text,
+                                    optionCController.text,
+                                    optionDController.text
+                                  ]
+                                : null,
+                            'correctOption': questionType == 'MCQ'
+                                ? correctOptionController.text
+                                : (questionType == 'True/False'
+                                    ? isTrue.toString()
+                                    : correctOptionController.text),
+                          });
+                          showForm = false;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text('Save Question',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ],
