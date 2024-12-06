@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:quiz_app/screens/admin/AdminAppBar.dart';
+// import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:quiz_app/screens/admin/AdminFooter.dart';
 
 class CreateExamPage extends StatefulWidget {
   const CreateExamPage({super.key});
@@ -17,13 +18,12 @@ class _CreateExamPageState extends State<CreateExamPage> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
-  final TextEditingController _submissionLimitController =
-      TextEditingController();
+  final TextEditingController _submissionLimitController = TextEditingController();
   final List<Map<String, dynamic>> _questions = [];
   bool _isLoading = false;
   int _currentStep = 0;
 
-    String questionType = 'MCQ'; // Default type
+  String questionType = 'MCQ'; // Default type
   final TextEditingController questionController = TextEditingController();
   final TextEditingController optionAController = TextEditingController();
   final TextEditingController optionBController = TextEditingController();
@@ -45,15 +45,13 @@ class _CreateExamPageState extends State<CreateExamPage> {
       });
 
       try {
-        final examDoc =
-            await FirebaseFirestore.instance.collection('Exams').add({
+        final examDoc = await FirebaseFirestore.instance.collection('Exams').add({
           'title': _titleController.text,
           'description': _descriptionController.text,
           'createdBy': _getUserEmail(),
           'startTime': _startTimeController.text,
           'endTime': _endTimeController.text,
           'submissionLimit': int.tryParse(_submissionLimitController.text) ?? 1,
-          // 'questions': _questions.map((q) => q['id']).toList(),
           'createdAt': Timestamp.now(),
         });
 
@@ -71,9 +69,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
           'questions': questionIds,
         });
 
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exam created successfully!') , backgroundColor: Colors.green),
+          const SnackBar(content: Text('Exam created successfully!'), backgroundColor: Colors.green),
         );
 
         _formKey.currentState?.reset();
@@ -92,16 +89,14 @@ class _CreateExamPageState extends State<CreateExamPage> {
     }
   }
 
-  Future<void> _selectTime(
-      BuildContext context, TextEditingController controller) async {
+  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
       final now = DateTime.now();
-      final selectedTime =
-          DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+      final selectedTime = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
       controller.text = DateFormat('HH:mm').format(selectedTime);
     }
   }
@@ -109,7 +104,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AdminAppBar(title: 'Create Exam'),
+      // appBar: const AdminAppBar(title: 'Create Exam'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stepper(
@@ -140,8 +135,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     if (_currentStep > 0)
                       TextButton(
                         style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all(
-                              Color.fromARGB(255, 179, 120, 224)),
+                          backgroundColor: MaterialStateProperty.all(Color.fromARGB(255, 179, 120, 224)),
                         ),
                         onPressed: details.onStepCancel,
                         child: const Text(
@@ -172,8 +166,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                       children: [
                         TextFormField(
                           controller: _titleController,
-                          decoration:
-                              const InputDecoration(labelText: 'Exam Title'),
+                          decoration: const InputDecoration(labelText: 'Exam Title'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a title';
@@ -183,8 +176,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         TextFormField(
                           controller: _descriptionController,
-                          decoration:
-                              const InputDecoration(labelText: 'Description'),
+                          decoration: const InputDecoration(labelText: 'Description'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a description';
@@ -194,11 +186,9 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         TextFormField(
                           controller: _startTimeController,
-                          decoration:
-                              const InputDecoration(labelText: 'Start Time'),
+                          decoration: const InputDecoration(labelText: 'Start Time'),
                           readOnly: true,
-                          onTap: () =>
-                              _selectTime(context, _startTimeController),
+                          onTap: () => _selectTime(context, _startTimeController),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please select a start time';
@@ -208,11 +198,9 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         TextFormField(
                           controller: _endTimeController,
-                          decoration:
-                              const InputDecoration(labelText: 'End Time'),
+                          decoration: const InputDecoration(labelText: 'End Time'),
                           readOnly: true,
-                          onTap: () =>
-                              _selectTime(context, _endTimeController),
+                          onTap: () => _selectTime(context, _endTimeController),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please select an end time';
@@ -222,15 +210,13 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         ),
                         TextFormField(
                           controller: _submissionLimitController,
-                          decoration: const InputDecoration(
-                              labelText: 'Submission Limit'),
+                          decoration: const InputDecoration(labelText: 'Submission Limit'),
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a submission limit';
                             }
-                            if (int.tryParse(value) == null ||
-                                int.parse(value) <= 0) {
+                            if (int.tryParse(value) == null || int.parse(value) <= 0) {
                               return 'Submission limit must be a positive number';
                             }
                             return null;
@@ -240,8 +226,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     ),
                   ),
                   isActive: _currentStep >= 0,
-                  state:
-                      _currentStep > 0 ? StepState.complete : StepState.indexed,
+                  state: _currentStep > 0 ? StepState.complete : StepState.indexed,
                 ),
                 Step(
                   title: const Text('Add Questions'),
@@ -253,8 +238,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         itemBuilder: (context, index) {
                           return ListTile(
                             title: Text(_questions[index]['text']),
-                            subtitle: Text(
-                                'Type: ${_questions[index]['type']}, Options: ${_questions[index]['options']?.join(', ')}'),
+                            subtitle: Text('Type: ${_questions[index]['type']}, Options: ${_questions[index]['options']?.join(', ')}'),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -282,8 +266,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     ],
                   ),
                   isActive: _currentStep >= 1,
-                  state:
-                      _currentStep > 1 ? StepState.complete : StepState.indexed,
+                  state: _currentStep > 1 ? StepState.complete : StepState.indexed,
                 ),
               ],
             ),
@@ -296,29 +279,28 @@ class _CreateExamPageState extends State<CreateExamPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-        const Text('Add Question', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-        const SizedBox(width: 16),
-        DropdownButton<String>(
-          borderRadius: BorderRadius.circular(8),
-          dropdownColor: Colors.white,
-          // isExpanded: true,
-          value: questionType,
-          items: ['MCQ', 'Text', 'True/False'].map((type) {
-            return DropdownMenuItem(
-              value: type,
-              child: Text(type),
-            );
-          }).toList(),
-          onChanged: (value) {
-            setState(() {
-              questionType = value!;
-              showForm = true;
-            });
-          },
-        ),
+            const Text('Add Question', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 16),
+            DropdownButton<String>(
+              borderRadius: BorderRadius.circular(8),
+              dropdownColor: Colors.white,
+              value: questionType,
+              items: ['MCQ', 'Text', 'True/False'].map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  questionType = value!;
+                  showForm = true;
+                });
+              },
+            ),
           ],
         ),
-         const SizedBox(height: 16),
+        const SizedBox(height: 16),
         Visibility(
           visible: showForm,
           child: Column(
@@ -371,18 +353,15 @@ class _CreateExamPageState extends State<CreateExamPage> {
               ],
               Row(
                 children: [
-                   ElevatedButton(
-                onPressed: (){
-
-                  setState(() {
-                    showForm = false;
-                  });
-                },
-                 child: const Text('cancel'
-                 
-                 ),
-              ),
-              const SizedBox(width: 100),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        showForm = false;
+                      });
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 100),
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -400,20 +379,15 @@ class _CreateExamPageState extends State<CreateExamPage> {
                               : null,
                           'correctOption': questionType == 'MCQ'
                               ? correctOptionController.text
-                              : (questionType == 'True/False'
-                                  ? isTrue.toString()
-                                  : correctOptionController.text),
+                              : (questionType == 'True/False' ? isTrue.toString() : correctOptionController.text),
                         });
                         showForm = false;
                       });
                     },
                     child: const Text('Add Question'),
                   ),
-
-                  
                 ],
               ),
-             
             ],
           ),
         ),
