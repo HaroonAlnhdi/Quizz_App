@@ -262,6 +262,7 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
 
         ],
       ),
+
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -300,6 +301,12 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                     onPressed: () => Navigator.pop(context, controller.text),
                     child: const Text('Join'),
                   ),
+                   ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/quizPage');
+          },
+          child: Text('Go to Quiz Page'),
+        ),
                 ],
               );
             },
@@ -311,6 +318,7 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
         },
         child: const Icon(Icons.add),
         backgroundColor: Colors.purple,
+
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // Routes
 import 'package:quiz_app/screens/LoginView.dart';
@@ -8,10 +9,15 @@ import 'package:quiz_app/screens/admin/QuizsListPage.dart';
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
+//student
+
 import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
+import 'package:quiz_app/screens/studen/QuizPage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Ensure this is defined
+  );
   runApp(const MainApp());
 }
 
@@ -35,6 +41,7 @@ class MainApp extends StatelessWidget {
         '/homeAdmin': (context) => const HomeViewAdmin(),
         '/homeStudent':(context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
+        '/quizPage': (context) => const QuizPage(),
       },
     );
   }
