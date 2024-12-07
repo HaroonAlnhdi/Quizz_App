@@ -26,8 +26,15 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
 
         ],
       ),
-      body: const Center(
-        child: Text('Welcome to Home View Student!'),
+      body: Center(
+        child: 
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/quizPage');
+          },
+          child: Text('Go to Quiz Page'),
+        )
+
         
       ),
     );
