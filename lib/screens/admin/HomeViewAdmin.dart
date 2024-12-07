@@ -64,16 +64,16 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                     children: [
                       Center(
                         child: Card(
-                          elevation: 1,
+                          elevation: 2,
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(30),
-                              bottomRight: Radius.circular(30),
+                              bottomLeft: Radius.circular(20),
+                              bottomRight: Radius.circular(20),
                             ),
                           ),
                           color: const Color(0xFF7826b5),
                           child: Padding(
-                            padding: const EdgeInsets.all(20.0),
+                            padding: const EdgeInsets.all(15.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -86,13 +86,13 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                                       'Welcome ${userInfo['firstName']} ${userInfo['lastName']}',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 15),
                                 Row(
                                   children: [
                                     const Icon(Icons.email,
@@ -102,7 +102,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                                       userInfo['email'],
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 18,
+                                        fontSize: 16,
                                       ),
                                     ),
                                   ],
@@ -117,34 +117,34 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                       GridView.count(
                         shrinkWrap: true,
                         crossAxisCount: 2,
-                        padding: const EdgeInsets.all(16.0),
-                        crossAxisSpacing: 16.0,
-                        mainAxisSpacing: 16.0,
+                        padding: const EdgeInsets.all(12.0),
+                        crossAxisSpacing: 12.0,
+                        mainAxisSpacing: 12.0,
                         children: [
                           GestureDetector(
                             onTap: () {
                               _onItemTapped(1);
                             },
                             child: Card(
-                              elevation: 4,
+                              elevation: 3,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               color: Colors.blue,
                               child: const Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(16.0),
+                                  padding: EdgeInsets.all(12.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.create,
-                                          color: Colors.white, size: 50),
-                                      SizedBox(height: 10),
+                                          color: Colors.white, size: 40),
+                                      SizedBox(height: 8),
                                       Text(
                                         'Create Exam',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -157,25 +157,25 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                           GestureDetector(
                             onTap: () => _onItemTapped(2),
                             child: Card(
-                              elevation: 4,
+                              elevation: 3,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               color: Colors.green,
                               child: const Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(16.0),
+                                  padding: EdgeInsets.all(12.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.grade,
-                                          color: Colors.white, size: 50),
-                                      SizedBox(height: 10),
+                                          color: Colors.white, size: 40),
+                                      SizedBox(height: 8),
                                       Text(
                                         'Exam Grades',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -185,31 +185,30 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
-
                           GestureDetector(
                             onTap: () {
                               Navigator.pushNamed(context, '/QuizsListPage');
                             },
                             child: Card(
-                              elevation: 4,
+                              elevation: 3,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               color: Colors.orange,
                               child: const Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(16.0),
+                                  padding: EdgeInsets.all(12.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.list,
-                                          color: Colors.white, size: 50),
-                                      SizedBox(height: 10),
+                                          color: Colors.white, size: 40),
+                                      SizedBox(height: 8),
                                       Text(
                                         'Quizs List',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -226,25 +225,25 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               Navigator.pushNamed(context, '/login');
                             },
                             child: Card(
-                              elevation: 4,
+                              elevation: 3,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               color: Colors.red,
                               child: const Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(16.0),
+                                  padding: EdgeInsets.all(12.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.logout,
-                                          color: Colors.white, size: 50),
-                                      SizedBox(height: 10),
+                                          color: Colors.white, size: 40),
+                                      SizedBox(height: 8),
                                       Text(
                                         'Logout',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -293,6 +292,8 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
+                          )
+
                         ],
                       ),
                     ],
