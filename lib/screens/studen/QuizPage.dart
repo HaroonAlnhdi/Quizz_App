@@ -27,6 +27,21 @@ class _QuizPageState extends State<QuizPage> {
     _controller.clear();
   }
 
+  submitForReal() {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not found.');
+    }
+
+    Answers['user'] = user.uid;
+    Answers['timestamp'] = FieldValue.serverTimestamp();
+    Answers['exam'] = 'GW9wp6qWKUvI8fad3mhr';
+
+    FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
+
+    Navigator.of(context).pop(); // Close the dialog
+  }
+
   var Answers = { };
 
   Future<List<Map<String, dynamic>>> getExam() async {
@@ -117,7 +132,30 @@ class _QuizPageState extends State<QuizPage> {
             children: [
                ElevatedButton(
                       onPressed: () {
-                        // Handle submission or logging of the current answer here
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Submit Answers'),
+                              content: const Text('Are you sure you want to submit your answers?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                    submitForReal();
+                                  },
+                                  child: const Text('Submit'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                         print(Answers);
                         },
                       child: const Text('Submit Answers'),
