@@ -62,6 +62,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                 return SingleChildScrollView(
                   child: Column(
                     children: [
+                      
                       Center(
                         child: Card(
                           elevation: 2,

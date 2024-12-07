@@ -50,8 +50,6 @@ class MainApp extends StatelessWidget {
         '/homeAdmin': (context) => const HomeViewAdmin(),
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
-        '/CreateClass': (context) => const CreateClass(),
-
         '/quizPage': (context) => QuizPage(),
       },
     );
