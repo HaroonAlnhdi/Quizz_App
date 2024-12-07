@@ -264,12 +264,14 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
 
         ],
       ),
+
         bottomNavigationBar: NavViewStudent(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),
       floatingActionButton: StudentJoinClass(
         onJoinClass: _joinClass,
+
       ),
     );
   }

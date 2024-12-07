@@ -22,12 +22,14 @@ class _LoginViewState extends State<LoginView> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
         // Get the user's role
+
         String role = await _getUserRole(userCredential.user!.uid);
 
         if (!mounted) return; // Ensure widget is still in the widget tree
@@ -42,6 +44,7 @@ class _LoginViewState extends State<LoginView> {
         String errorMessage;
         switch (e.code) {
           case 'user-not-found':
+
             errorMessage = 'No user found with this email. Please check your credentials.';
             break;
           case 'user-disabled':
@@ -56,6 +59,7 @@ class _LoginViewState extends State<LoginView> {
             SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
           );
         }
+
       } finally {
         if (mounted) {
           setState(() {
@@ -74,6 +78,7 @@ class _LoginViewState extends State<LoginView> {
         return userData['role'] ?? 'unknown';
       } else {
         throw Exception('User not found or no role defined');
+
       }
     } catch (e) {
       throw Exception('Failed to get user role: $e');
@@ -168,7 +173,8 @@ class _LoginViewState extends State<LoginView> {
                     : ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7826B5),
-                          padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 150, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
