@@ -1,6 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'NavViewStudent.dart';
+import 'StudentJoinClass.dart';
 
 class HomeViewStudent extends StatefulWidget {
   const HomeViewStudent({Key? key}) : super(key: key);
@@ -263,61 +265,12 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
         ],
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.purple,
-        onTap: _onItemTapped,
+        bottomNavigationBar: NavViewStudent(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          String? classCode = await showDialog<String>(
-            context: context,
-            builder: (context) {
-              TextEditingController controller = TextEditingController();
-              return AlertDialog(
-                title: const Text('Join Class'),
-                content: TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter class code',
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, null),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, controller.text),
-                    child: const Text('Join'),
-                  ),
-                   ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/quizPage');
-          },
-          child: Text('Go to Quiz Page'),
-        ),
-                ],
-              );
-            },
-          );
-
-          if (classCode != null && classCode.isNotEmpty) {
-            _joinClass(classCode);
-          }
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.purple,
+      floatingActionButton: StudentJoinClass(
+        onJoinClass: _joinClass,
 
       ),
     );

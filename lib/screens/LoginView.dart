@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -29,8 +28,13 @@ class _LoginViewState extends State<LoginView> {
           password: _passwordController.text.trim(),
         );
 
+        // Get the user's role
+
         String role = await _getUserRole(userCredential.user!.uid);
 
+        if (!mounted) return; // Ensure widget is still in the widget tree
+
+        // Navigate based on role
         if (role == 'student') {
           Navigator.pushReplacementNamed(context, '/homeStudent');
         } else if (role == 'admin') {
@@ -40,36 +44,41 @@ class _LoginViewState extends State<LoginView> {
         String errorMessage;
         switch (e.code) {
           case 'user-not-found':
-            errorMessage =
-                'No user found with this email. Please check your credentials.';
+
+            errorMessage = 'No user found with this email. Please check your credentials.';
             break;
           case 'user-disabled':
-            errorMessage =
-                'This user account has been disabled. Please contact support.';
+            errorMessage = 'This user account has been disabled. Please contact support.';
             break;
           default:
-            errorMessage = 'Login failed. email or password is wrong .';
+            errorMessage = 'Login failed. Email or password is wrong.';
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
+        }
+
       } finally {
-        setState(() {
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
 
   Future<String> _getUserRole(String uid) async {
     try {
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
-      if (userDoc.exists) {
-        return userDoc['role'];
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (userDoc.exists && userDoc.data() != null) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        return userData['role'] ?? 'unknown';
       } else {
-        throw Exception('User not found');
+        throw Exception('User not found or no role defined');
+
       }
     } catch (e) {
       throw Exception('Failed to get user role: $e');
@@ -160,7 +169,7 @@ class _LoginViewState extends State<LoginView> {
                 ),
                 const SizedBox(height: 20),
                 _isLoading
-                    ? CircularProgressIndicator()
+                    ? const CircularProgressIndicator()
                     : ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7826B5),
