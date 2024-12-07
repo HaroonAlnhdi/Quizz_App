@@ -115,38 +115,111 @@ class _QuizPageState extends State<QuizPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
-                        if (currentQuestion['type'] == 'MCQ')
-                          ...currentQuestion['options']
-                              .map<Widget>((option) => ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _userAnswer = option;
-                                      });
-                                    },
-                                    child: Text(option),
-                                  ))
-                              .toList(),
+                        
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              if (currentQuestion['type'] == 'MCQ')
+                Wrap(
+                  spacing: 20.0, // Space between buttons horizontally
+                  runSpacing: 10.0, // Space between rows of buttons
+                  children: currentQuestion['options']
+                      .map<Widget>((option) => SizedBox(
+                            width: 150, // Set a minimum width for buttons
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _userAnswer = option;
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  option,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
+
+
+
+
                         if (currentQuestion['type'] == 'True/False')
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
+                            children: [                              
                               ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _userAnswer = 'True';
-                                  });
-                                },
-                                child: const Text('True'),
+                              onPressed: () {
+                                setState(() {
+                                  _userAnswer = 'True';
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
                               ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _userAnswer = 'False';
-                                  });
-                                },
-                                child: const Text('False'),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    'True',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
                               ),
+                            ),
+
+
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _userAnswer = 'False';
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    'False',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
+                            
                             ],
                           ),
                         if (currentQuestion['type'] == 'Text')
@@ -161,11 +234,6 @@ class _QuizPageState extends State<QuizPage> {
                               hintText: 'Enter your answer',
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
