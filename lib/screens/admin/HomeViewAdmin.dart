@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:quiz_app/screens/admin/CreateExamPage.dart';
+import 'package:quiz_app/screens/admin/CreateClass.dart';
 // import 'package:quiz_app/screens/admin/QuizsListPage.dart';
 
 class HomeViewAdmin extends StatefulWidget {
@@ -123,7 +124,6 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                           GestureDetector(
                             onTap: () {
                               _onItemTapped(1);
-    
                             },
                             child: Card(
                               elevation: 4,
@@ -219,7 +219,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
-                          
+
                           GestureDetector(
                             onTap: () {
                               _auth.signOut();
@@ -253,8 +253,46 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                                 ),
                               ),
                             ),
-                          )
+                          ),
 
+                          // Add this inside the `children` list of GridView
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const CreateClass()),
+                              );
+                            },
+                            child: Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              color: Colors.purple,
+                              child: const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.class_,
+                                          color: Colors.white, size: 50),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        'Create Class',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -264,8 +302,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
             },
           ),
           CreateExamPage(),
-          
-          Center(child: Text('Profile Page')), 
+          Center(child: Text('Profile Page')),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:quiz_app/firebase_options.dart';
 
 // Routes
 import 'package:quiz_app/screens/LoginView.dart';
@@ -9,9 +10,13 @@ import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
 import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
+import 'package:quiz_app/screens/admin/CreateClass.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MainApp());
 }
 
@@ -20,7 +25,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     return MaterialApp(
+    return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -33,8 +38,9 @@ class MainApp extends StatelessWidget {
         '/login': (context) => const LoginView(),
         '/signup': (context) => const SignupView(),
         '/homeAdmin': (context) => const HomeViewAdmin(),
-        '/homeStudent':(context) => const HomeViewStudent(),
+        '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
+        '/CreateClass': (context) => const CreateClass(),
       },
     );
   }

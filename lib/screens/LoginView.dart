@@ -23,36 +23,37 @@ class _LoginViewState extends State<LoginView> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        
         String role = await _getUserRole(userCredential.user!.uid);
 
         if (role == 'student') {
-            Navigator.pushReplacementNamed(context, '/homeStudent');
-      } else if (role == 'admin') {
-            Navigator.pushReplacementNamed(context, '/homeAdmin');
+          Navigator.pushReplacementNamed(context, '/homeStudent');
+        } else if (role == 'admin') {
+          Navigator.pushReplacementNamed(context, '/homeAdmin');
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage =
+                'No user found with this email. Please check your credentials.';
+            break;
+          case 'user-disabled':
+            errorMessage =
+                'This user account has been disabled. Please contact support.';
+            break;
+          default:
+            errorMessage = 'Login failed. email or password is wrong .';
         }
 
-      } on FirebaseAuthException catch (e) {
-       String errorMessage;
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'No user found with this email. Please check your credentials.';
-          break;
-        case 'user-disabled':
-          errorMessage = 'This user account has been disabled. Please contact support.';
-          break;
-        default:
-          errorMessage = 'Login failed. email or password is wrong .';
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage) , backgroundColor: Colors.red),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
       } finally {
         setState(() {
           _isLoading = false;
@@ -62,16 +63,17 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Future<String> _getUserRole(String uid) async {
-  try {
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    if (userDoc.exists) {
-      return userDoc['role'];
-    } else {
-      throw Exception('User not found');
+    try {
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        return userDoc['role'];
+      } else {
+        throw Exception('User not found');
+      }
+    } catch (e) {
+      throw Exception('Failed to get user role: $e');
     }
-  } catch (e) {
-    throw Exception('Failed to get user role: $e');
-  }
   }
 
   @override
@@ -162,7 +164,8 @@ class _LoginViewState extends State<LoginView> {
                     : ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF7826B5),
-                          padding: const EdgeInsets.symmetric(horizontal: 150, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 150, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
