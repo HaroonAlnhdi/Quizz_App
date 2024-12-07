@@ -40,6 +40,7 @@ class _QuizPageState extends State<QuizPage> {
     FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
 
     Navigator.of(context).pop(); // Close the dialog
+    Navigator.of(context).pushReplacementNamed('/homeStudent');
   }
 
   var Answers = { };
