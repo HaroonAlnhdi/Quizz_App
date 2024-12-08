@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:quiz_app/screens/studen/QuizzesPage.dart';
 import 'NavViewStudent.dart';
 import 'StudentJoinClass.dart';
 
@@ -34,7 +35,7 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
           .where('students', arrayContains: user.uid)
           .get();
       return classSnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => {...(doc.data() as Map<String, dynamic>), 'id': doc.id})
           .toList();
     }
     return [];
@@ -55,8 +56,8 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
             .doc(classId)
             .update({'students': FieldValue.arrayUnion([user.uid])});
 
-        if (!mounted) return; // Prevent UI updates on disposed widgets
-        setState(() {});
+        if (!mounted) return;
+        setState(() {}); // Refresh UI
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Successfully joined the class!')),
         );
@@ -164,24 +165,34 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                     } else {
                       final classes = snapshot.data!;
                       return Column(
-                        children: [
-                          for (var classInfo in classes)
-                            ExpansionTile(
-                              title: Text(
-                                classInfo['name'] ?? 'Class Name',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                  'Course Number: ${classInfo['number'] ?? 'N/A'}'),
-                              children: [
-                                ListTile(
-                                  title: const Text('Class Code'),
-                                  subtitle: Text(classInfo['code'] ?? 'N/A'),
-                                ),
-                              ],
+                        children: classes.map((classInfo) {
+                          return ExpansionTile(
+                            title: Text(
+                              classInfo['name'] ?? 'Class Name',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                        ],
+                            subtitle: Text('Course Number: ${classInfo['number'] ?? 'N/A'}'),
+                            children: [
+                              ListTile(
+                                title: const Text('Class Code'),
+                                subtitle: Text(classInfo['code'] ?? 'N/A'),
+                              ),
+                              ListTile(
+                                title: const Text('View Quizzes'),
+                                trailing: const Icon(Icons.arrow_forward),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          QuizzesPage(classId: classInfo['id']),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        }).toList(),
                       );
                     }
                   },
@@ -189,89 +200,78 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
               ],
             ),
           ),
-          // Profile screen placeholder
+          // Profile screen
           FutureBuilder<Map<String, dynamic>>(
-              future: _getUserInfo(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (snapshot.hasError || snapshot.data == null) {
-                  return const Center(
-                    child: Text(
-                      'Error fetching profile info',
-                      style: TextStyle(fontSize: 16, color: Colors.red),
+            future: _getUserInfo(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError || snapshot.data == null) {
+                return const Center(
+                  child: Text(
+                    'Error fetching profile info',
+                    style: TextStyle(fontSize: 16, color: Colors.red),
+                  ),
+                );
+              } else {
+                final userInfo = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  );
-                } else {
-                  final userInfo = snapshot.data!;
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 4,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.person,
-                                  size: 40,
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.person, size: 40, color: Colors.blue.shade700),
+                              const SizedBox(width: 16),
+                              Text(
+                                'Profile Info',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                   color: Colors.blue.shade700,
                                 ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  'Profile Info',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 24, thickness: 1),
-                            Text(
-                              'First Name: ${userInfo['firstName'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Second Name: ${userInfo['lastName'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Email: ${userInfo['email'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54),
-                            ),
-                          ],
-                        ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24, thickness: 1),
+                          Text(
+                            'First Name: ${userInfo['firstName'] ?? 'N/A'}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Last Name: ${userInfo['lastName'] ?? 'N/A'}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Email: ${userInfo['email'] ?? 'N/A'}',
+                            style: const TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }
-              },
-            ),
-
-
+                  ),
+                );
+              }
+            },
+          ),
         ],
       ),
-
-        bottomNavigationBar: NavViewStudent(
+      bottomNavigationBar: NavViewStudent(
         selectedIndex: _selectedIndex,
         onItemTapped: _onItemTapped,
       ),
       floatingActionButton: StudentJoinClass(
         onJoinClass: _joinClass,
-
       ),
     );
   }
