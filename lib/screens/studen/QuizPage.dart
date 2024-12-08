@@ -4,9 +4,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizPage extends StatefulWidget {
+  final String ExamId;
+
   @override
   _QuizPageState createState() => _QuizPageState();
+  const QuizPage({Key? key, required this.ExamId}) : super(key: key);
+
 }
+
+  
+
 
 class _QuizPageState extends State<QuizPage> {
   late Future<List<Map<String, dynamic>>> _examFuture; // Cache the future
@@ -35,7 +42,7 @@ class _QuizPageState extends State<QuizPage> {
 
     Answers['user'] = user.uid;
     Answers['timestamp'] = FieldValue.serverTimestamp();
-    Answers['exam'] = 'GW9wp6qWKUvI8fad3mhr';
+    Answers['exam'] = widget.ExamId;
 
     FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
 
@@ -48,13 +55,14 @@ class _QuizPageState extends State<QuizPage> {
   Future<List<Map<String, dynamic>>> getExam() async {
     var examSnapshot = await FirebaseFirestore.instance
         .collection('Exams')
-        .doc('GW9wp6qWKUvI8fad3mhr')
+        .doc(widget.ExamId)
         .get();
+        print(widget.ExamId);
+
 
     if (!examSnapshot.exists || examSnapshot.data()?['questions'] == null) {
       throw Exception('Exam not found or missing questions field.');
     }
-
     var questions = examSnapshot.data()?['questions'] as List<dynamic>;
 
     var questionSnapshots = await Future.wait(
@@ -92,6 +100,7 @@ class _QuizPageState extends State<QuizPage> {
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -320,6 +329,7 @@ class _QuizPageState extends State<QuizPage> {
                           ? Colors.blue
                           : Colors.grey,
                     ),
+
                   ],
                 ),
               ),
