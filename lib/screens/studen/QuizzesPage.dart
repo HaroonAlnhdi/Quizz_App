@@ -41,6 +41,14 @@ class QuizzesPage extends StatelessWidget {
                 return ListTile(
                   title: Text(quiz['title'] ?? 'Untitled Quiz'),
                   subtitle: Text('Date: ${quiz['quizDate']}'),
+                  onTap: () {
+                    print(quiz['id']);
+                    Navigator.pushNamed(
+                      context,
+                      '/quizPage',
+                      arguments: quiz['id'],
+                    );
+                  },
                 );
               },
             );

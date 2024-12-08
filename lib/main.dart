@@ -45,7 +45,14 @@ class MainApp extends StatelessWidget {
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
         '/CreateClass': (context) => const CreateClass(),
-        '/quizPage': (context) => QuizPage(),
+        '/quizPage': (context) {
+          final examId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (examId == null) {
+            throw Exception("ExamId is required to navigate to QuizPage.");
+          }
+          return QuizPage(ExamId: examId);
+        },
+
 
       },
     );
