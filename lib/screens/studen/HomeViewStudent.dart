@@ -87,15 +87,26 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.purple,
+        
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout , color: Colors.white) ,
+            onPressed: () async {
+              await _auth.signOut();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       ),
-      drawer: NavViewStudent(
+      drawer:
+       NavViewStudent(
         getUserInfo: _getUserInfo,
         onDrawerItemTapped: _onDrawerItemTapped,
       ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // Home screen content
+          
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -157,80 +168,100 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                   }
                 },
               ),
-              Expanded(
-                child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getStudentClasses(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError || snapshot.data == null) {
-                      return const Center(child: Text("Error fetching classes."));
-                    } else {
-                      final classes = snapshot.data!;
-                      if (classes.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            "No classes found.",
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        );
-                      }
-
-                      return ListView.builder(
-                        itemCount: classes.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final classInfo = classes[index];
-                          return InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => ClassDetailPage(
-                                  heroTag: index,
-                                  classInfo: classInfo,
-                                ),
-                              ));
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  Hero(
-                                    tag: index,
-                                    child: CircleAvatar(
-                                      radius: 40,
-                                      backgroundColor: Colors.purple.shade100,
-                                      child: const Icon(Icons.class_,
-                                          size: 40, color: Colors.purple),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          classInfo['name'] ?? 'Class Name',
-                                          style:
-                                              Theme.of(context).textTheme.headline6,
-                                        ),
-                                        Text(
-                                          'Course Number: ${classInfo['number'] ?? 'N/A'}',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .subtitle1,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                  },
+              Container(
+                alignment: Alignment.center,
+              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.0),
+              padding: const EdgeInsets.all(8.0),
+               width: double.infinity,
+              decoration: BoxDecoration(   
+                color: Colors.purple.shade50,
+              ),
+             child: const Text(
+                'Your Classes ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple,
+                  
                 ),
               ),
+              ),
+            Expanded(
+  child: FutureBuilder<List<Map<String, dynamic>>>(
+    future: _getStudentClasses(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (snapshot.hasError || snapshot.data == null) {
+        return const Center(child: Text("Error fetching classes."));
+      } else {
+        final classes = snapshot.data!;
+        if (classes.isEmpty) {
+          return const Center(
+            child: Text(
+              "No classes found.",
+              style: TextStyle(fontSize: 18),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          itemCount: classes.length,
+          itemBuilder: (BuildContext context, int index) {
+            final classInfo = classes[index];
+            return InkWell(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ClassDetailPage(
+                    heroTag: index,
+                    classInfo: classInfo,
+                  ),
+                ));
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.0),
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  border: Border.all(color: Colors.purple, width: 1.0),
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                child: Row(
+                  children: [
+                    Hero(
+                      tag: index,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.purple.shade100,
+                        child: const Icon(Icons.class_, size: 40, color: Colors.purple),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            classInfo['name'] ?? 'Class Name',
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                          Text(
+                            'Course Number: ${classInfo['number'] ?? 'N/A'}',
+                            style: Theme.of(context).textTheme.subtitle1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }
+    },
+  ),
+)
             ],
           ),
           // Profile screen
