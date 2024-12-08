@@ -40,7 +40,10 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AdminAppBar(title: 'Dashboard'),
-      body: PageView(
+      body: SingleChildScrollView(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height,
+          child: PageView(
         controller: _pageController,
         onPageChanged: (index) {
           setState(() {
@@ -117,6 +120,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                       const SizedBox(height: 20),
                       GridView.count(
                         shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
                         crossAxisCount: 2,
                         padding: const EdgeInsets.all(12.0),
                         crossAxisSpacing: 12.0,
@@ -261,7 +265,8 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => const CreateClass()),
+                                        builder: (context) =>
+                                            const CreateClass()),
                               );
                             },
                             child: Card(
@@ -305,6 +310,8 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
           CreateExamPage(),
           Center(child: Text('Profile Page')),
         ],
+          ),
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Color(0xFF7826b5),
