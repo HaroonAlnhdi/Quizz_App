@@ -5,7 +5,7 @@ import 'package:quiz_app/screens/LoginView.dart';
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const AdminAppBar({Key? key, required this.title}) : super(key: key);
+  const AdminAppBar({Key? key, required this.title, }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
