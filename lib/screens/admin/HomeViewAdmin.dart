@@ -154,9 +154,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                             ),
                           ),
                           GestureDetector(
-                                 onTap: () {
-                                    Navigator.pushNamed(context, '/newExamGrades'); // Updated route
-                                  }, 
+                            onTap: () => _onItemTapped(2),
                             child: Card(
                               elevation: 3,
                               shape: RoundedRectangleBorder(
