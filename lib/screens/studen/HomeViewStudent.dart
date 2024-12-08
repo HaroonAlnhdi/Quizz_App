@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:quiz_app/screens/studen/NavViewStudent.dart';
 import 'package:quiz_app/screens/studen/QuizzesPage.dart';
-import 'NavViewStudent.dart';
 import 'StudentJoinClass.dart';
 
 class HomeViewStudent extends StatefulWidget {
@@ -15,7 +15,7 @@ class HomeViewStudent extends StatefulWidget {
 class _HomeViewStudentState extends State<HomeViewStudent> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  int _selectedIndex = 0; // Current index for the nav bar
+  int _selectedIndex = 0; // Current index for navigation (0 = Home, 1 = Profile)
 
   Future<Map<String, dynamic>> _getUserInfo() async {
     User? user = _auth.currentUser;
@@ -70,9 +70,10 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
     }
   }
 
-  void _onItemTapped(int index) {
+  void _onDrawerItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      Navigator.of(context).pop(); 
     });
   }
 
@@ -80,8 +81,13 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Dashboard'),
+        centerTitle: true,
+        title: const Text('Student Dashboard' , style: TextStyle(color: Colors.white , fontWeight: FontWeight.bold) , ),
         backgroundColor: Colors.purple,
+      ),
+      drawer: NavViewStudent(
+        getUserInfo: _getUserInfo,
+        onDrawerItemTapped: _onDrawerItemTapped,
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -262,13 +268,12 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                   ),
                 );
               }
+              
             },
           ),
+
         ],
-      ),
-      bottomNavigationBar: NavViewStudent(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+
       ),
       floatingActionButton: StudentJoinClass(
         onJoinClass: _joinClass,
