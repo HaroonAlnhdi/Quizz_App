@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:quiz_app/screens/studen/QuizzesPage.dart';
 
 import 'firebase_options.dart';
-
-
-import 'package:quiz_app/firebase_options.dart';
 
 // Routes
 import 'package:quiz_app/screens/LoginView.dart';
@@ -13,18 +11,14 @@ import 'package:quiz_app/screens/admin/QuizsListPage.dart';
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
-//student
-
 import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
 import 'package:quiz_app/screens/admin/CreateClass.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-
-  options: DefaultFirebaseOptions.currentPlatform,
-
-   );
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(const MainApp());
 }
@@ -50,8 +44,6 @@ class MainApp extends StatelessWidget {
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
         '/CreateClass': (context) => const CreateClass(),
-
-        '/quizPage': (context) => const QuizPage(),
       },
     );
   }
