@@ -32,6 +32,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
   final TextEditingController correctOptionController = TextEditingController();
   bool isTrue = true;
   bool showForm = false;
+  String? _classId;
 
   String? _getUserEmail() {
     final user = FirebaseAuth.instance.currentUser;
@@ -55,6 +56,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
           'submissionLimit': int.tryParse(_submissionLimitController.text) ?? 1,
           'quizDate': _quizDateController.text,
           'createdAt': Timestamp.now(),
+          'class' : _classId, // Add class ID here
           
         });
 
@@ -315,6 +317,40 @@ class _CreateExamPageState extends State<CreateExamPage> {
                               return 'Please select a quiz date';
                             }
                             return null;
+                          },
+                        ),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance.collection('classes').snapshots(),
+                          builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const CircularProgressIndicator();
+                          }
+                          var classList = snapshot.data!.docs.map((doc) {
+                            return DropdownMenuItem<String>(
+                            value: doc.id,
+                            child: Text(doc['name']),
+                            );
+                          }).toList();
+                          return DropdownButtonFormField<String>(
+                            
+                            decoration: const InputDecoration(
+                            labelText: 'Select Class',
+                            prefixIcon: Icon(Icons.class_, color: Color(0xFF7826B5)),
+                            border: OutlineInputBorder(),
+                            ),
+                            items: classList,
+                            onChanged: (value) {
+                            setState(() {
+                              _classId = value!;
+                            });
+                            },
+                            validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a class';
+                            }
+                            return null;
+                            },
+                          );
                           },
                         ),
                         const SizedBox(height: 16),
