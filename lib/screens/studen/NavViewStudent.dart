@@ -76,27 +76,29 @@ class NavViewStudent extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.list, color: Color(0xFF7826B5)),
               title: const Text('Quiz List', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-              onTap: () => onDrawerItemTapped(5),
+              onTap: () {
+                Navigator.pushNamed(context, '/QuizsListPage');
+              },
             ),
             ListTile(
               leading: const Icon(Icons.score, color: Color(0xFF7826B5)),
               title: const Text('Quiz Degrees', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-              onTap: () => onDrawerItemTapped(6),
+              onTap: () {},
             ),
             ListTile(
             leading: const Icon(Icons.info, color: Color(0xFF7826B5)),
             title: const Text('About', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-            onTap: () => onDrawerItemTapped(3),
+            onTap: () {},
             ),
             ListTile(
             leading: const Icon(Icons.contact_page, color: Color(0xFF7826B5)),
             title: const Text('Contact Us', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-            onTap: () => onDrawerItemTapped(4),
+            onTap: () {},
             ),
             ListTile(
             leading: const Icon(Icons.settings, color: Color(0xFF7826B5)),
             title: const Text('Settings', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-            onTap: () => onDrawerItemTapped(2),
+            onTap: () {},
             ),
             ListTile(
             leading: const Icon(Icons.logout, color: Color(0xFF7826B5)),

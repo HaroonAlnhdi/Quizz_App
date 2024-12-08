@@ -73,7 +73,7 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
   void _onDrawerItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
     });
   }
 
@@ -82,7 +82,10 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Student Dashboard' , style: TextStyle(color: Colors.white , fontWeight: FontWeight.bold) , ),
+        title: const Text(
+          'Student Dashboard',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.purple,
       ),
       drawer: NavViewStudent(
@@ -93,118 +96,142 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
         index: _selectedIndex,
         children: [
           // Home screen content
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FutureBuilder<Map<String, dynamic>>(
-                  future: _getUserInfo(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      );
-                    } else if (snapshot.hasError || snapshot.data == null) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Error fetching user info'),
-                      );
-                    } else {
-                      final userInfo = snapshot.data!;
-                      return Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.all(16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        color: Colors.purple.shade100,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.person, color: Colors.purple),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${userInfo['firstName'] ?? 'N/A'} ${userInfo['lastName'] ?? 'N/A'}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FutureBuilder<Map<String, dynamic>>(
+                future: _getUserInfo(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (snapshot.hasError || snapshot.data == null) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Error fetching user info'),
+                    );
+                  } else {
+                    final userInfo = snapshot.data!;
+                    return Card(
+                      elevation: 4,
+                      margin: const EdgeInsets.all(16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      color: Colors.purple.shade100,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.person, color: Colors.purple),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${userInfo['firstName'] ?? 'N/A'} ${userInfo['lastName'] ?? 'N/A'}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.email, color: Colors.purple),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    userInfo['email'] ?? 'No email available',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.email, color: Colors.purple),
+                                const SizedBox(width: 8),
+                                Text(
+                                  userInfo['email'] ?? 'No email available',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      );
-                    }
-                  },
-                ),
-                FutureBuilder<List<Map<String, dynamic>>>(
+                      ),
+                    );
+                  }
+                },
+              ),
+              Expanded(
+                child: FutureBuilder<List<Map<String, dynamic>>>(
                   future: _getStudentClasses(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     } else if (snapshot.hasError || snapshot.data == null) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Error fetching classes'),
-                      );
+                      return const Center(child: Text("Error fetching classes."));
                     } else {
                       final classes = snapshot.data!;
-                      return Column(
-                        children: classes.map((classInfo) {
-                          return ExpansionTile(
-                            title: Text(
-                              classInfo['name'] ?? 'Class Name',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text('Course Number: ${classInfo['number'] ?? 'N/A'}'),
-                            children: [
-                              ListTile(
-                                title: const Text('Class Code'),
-                                subtitle: Text(classInfo['code'] ?? 'N/A'),
-                              ),
-                              ListTile(
-                                title: const Text('View Quizzes'),
-                                trailing: const Icon(Icons.arrow_forward),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          QuizzesPage(classId: classInfo['id']),
+                      if (classes.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            "No classes found.",
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: classes.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final classInfo = classes[index];
+                          return InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => ClassDetailPage(
+                                  heroTag: index,
+                                  classInfo: classInfo,
+                                ),
+                              ));
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  Hero(
+                                    tag: index,
+                                    child: CircleAvatar(
+                                      radius: 40,
+                                      backgroundColor: Colors.purple.shade100,
+                                      child: const Icon(Icons.class_,
+                                          size: 40, color: Colors.purple),
                                     ),
-                                  );
-                                },
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          classInfo['name'] ?? 'Class Name',
+                                          style:
+                                              Theme.of(context).textTheme.headline6,
+                                        ),
+                                        Text(
+                                          'Course Number: ${classInfo['number'] ?? 'N/A'}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .subtitle1,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           );
-                        }).toList(),
+                        },
                       );
                     }
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           // Profile screen
           FutureBuilder<Map<String, dynamic>>(
@@ -235,7 +262,8 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.person, size: 40, color: Colors.blue.shade700),
+                              Icon(Icons.person,
+                                  size: 40, color: Colors.blue.shade700),
                               const SizedBox(width: 16),
                               Text(
                                 'Profile Info',
@@ -250,17 +278,20 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                           const Divider(height: 24, thickness: 1),
                           Text(
                             'First Name: ${userInfo['firstName'] ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Last Name: ${userInfo['lastName'] ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Email: ${userInfo['email'] ?? 'N/A'}',
-                            style: const TextStyle(fontSize: 16, color: Colors.black54),
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.black54),
                           ),
                         ],
                       ),
@@ -268,15 +299,78 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                   ),
                 );
               }
-              
             },
           ),
-
         ],
-
       ),
       floatingActionButton: StudentJoinClass(
         onJoinClass: _joinClass,
+      ),
+    );
+  }
+}
+
+class ClassDetailPage extends StatelessWidget {
+  final int heroTag;
+  final Map<String, dynamic> classInfo;
+
+  const ClassDetailPage({Key? key, required this.heroTag, required this.classInfo})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(classInfo['name'] ?? "Class Details")),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Hero(
+                tag: heroTag,
+                child: CircleAvatar(
+                  radius: 80,
+                  backgroundColor: Colors.purple.shade100,
+                  child: const Icon(Icons.class_, size: 80, color: Colors.purple),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Class Name: ${classInfo['name'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Course Number: ${classInfo['number'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Class Code: ${classInfo['code'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            QuizzesPage(classId: classInfo['id']),
+                      ));
+                    },
+                    icon: const Icon(Icons.quiz),
+                    label: const Text('View Quizzes'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
