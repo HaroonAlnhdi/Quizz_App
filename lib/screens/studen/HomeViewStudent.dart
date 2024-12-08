@@ -243,11 +243,11 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
                         children: [
                           Text(
                             classInfo['name'] ?? 'Class Name',
-                            style: Theme.of(context).textTheme.headline6,
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                           Text(
                             'Course Number: ${classInfo['number'] ?? 'N/A'}',
-                            style: Theme.of(context).textTheme.subtitle1,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ],
                       ),
@@ -374,17 +374,17 @@ class ClassDetailPage extends StatelessWidget {
                 children: [
                   Text(
                     'Class Name: ${classInfo['name'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.headline6,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Course Number: ${classInfo['number'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Class Code: ${classInfo['code'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
