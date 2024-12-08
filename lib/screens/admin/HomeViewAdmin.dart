@@ -156,8 +156,9 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => _onItemTapped(2),
-                            child: Card(
+                                        onTap: () {
+                                    Navigator.pushNamed(context, '/newExamGrades'); // Updated route
+                                  },                            child: Card(
                               elevation: 3,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
@@ -293,6 +294,7 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
+                     
 
                         ],
                       ),
@@ -331,16 +333,16 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
   }
 }
 
-class ExamGradesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Exam Grades'),
-      ),
-      body: Center(
-        child: Text('Exam Grades Page'),
-      ),
-    );
-  }
-}
+// class ExamGradesPage extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Exam Grades'),
+//       ),
+//       body: Center(
+//         child: Text('Exam Grades Page'),
+//       ),
+//     );
+//   }
+// }
