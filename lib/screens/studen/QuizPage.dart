@@ -4,13 +4,47 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizPage extends StatefulWidget {
-  const QuizPage({super.key});
-
   @override
   _QuizPageState createState() => _QuizPageState();
 }
 
 class _QuizPageState extends State<QuizPage> {
+  late Future<List<Map<String, dynamic>>> _examFuture; // Cache the future
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _examFuture = getExam(); // Assign the future once in initState
+  }
+
+  void dispose() {
+    _controller.dispose(); // Clean up the controller when the widget is removed
+    super.dispose();
+  }
+
+  void _handleNextButtonPress() {
+    _controller.clear();
+  }
+
+  submitForReal() {
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not found.');
+    }
+
+    Answers['user'] = user.uid;
+    Answers['timestamp'] = FieldValue.serverTimestamp();
+    Answers['exam'] = 'GW9wp6qWKUvI8fad3mhr';
+
+    FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
+
+    Navigator.of(context).pop(); // Close the dialog
+    Navigator.of(context).pushReplacementNamed('/homeStudent');
+  }
+
+  var Answers = { };
+
   Future<List<Map<String, dynamic>>> getExam() async {
     var examSnapshot = await FirebaseFirestore.instance
         .collection('Exams')
@@ -42,13 +76,11 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   int _currentIndex = 0;
-  String _userAnswer = "";
 
   void _goToNextQuestion(int totalQuestions) {
     if (_currentIndex < totalQuestions - 1) {
       setState(() {
         _currentIndex++;
-        _userAnswer = ""; // Reset answer for the new question
       });
     }
   }
@@ -57,7 +89,6 @@ class _QuizPageState extends State<QuizPage> {
     if (_currentIndex > 0) {
       setState(() {
         _currentIndex--;
-        _userAnswer = ""; // Reset answer for the new question
       });
     }
   }
@@ -77,8 +108,9 @@ class _QuizPageState extends State<QuizPage> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: getExam(),
+      body: 
+      FutureBuilder<List<Map<String, dynamic>>>(
+        future: _examFuture, // Use cached future
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -99,6 +131,36 @@ class _QuizPageState extends State<QuizPage> {
           return Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+               ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Submit Answers'),
+                              content: const Text('Are you sure you want to submit your answers?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // Close the dialog
+                                    submitForReal();
+                                  },
+                                  child: const Text('Submit'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        print(Answers);
+                        },
+                      child: const Text('Submit Answers'),
+            ),
               Expanded(
                 child: Center(
                   child: Padding(
@@ -115,57 +177,129 @@ class _QuizPageState extends State<QuizPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
-                        if (currentQuestion['type'] == 'MCQ')
-                          ...currentQuestion['options']
-                              .map<Widget>((option) => ElevatedButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        _userAnswer = option;
-                                      });
-                                    },
-                                    child: Text(option),
-                                  ))
-                              .toList(),
-                        if (currentQuestion['type'] == 'True/False')
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _userAnswer = 'True';
-                                  });
-                                },
-                                child: const Text('True'),
-                              ),
-                              const SizedBox(width: 10),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _userAnswer = 'False';
-                                  });
-                                },
-                                child: const Text('False'),
-                              ),
-                            ],
-                          ),
-                        if (currentQuestion['type'] == 'Text')
-                          TextField(
-                            onChanged: (value) {
-                              setState(() {
-                                _userAnswer = value;
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Enter your answer',
-                            ),
-                          ),
                       ],
                     ),
                   ),
                 ),
               ),
+               if (currentQuestion['type'] == 'MCQ')
+                Wrap(
+                  spacing: 20.0, // Space between buttons horizontally
+                  runSpacing: 10.0, // Space between rows of buttons
+                  children: currentQuestion['options']
+                      .map<Widget>((option) => SizedBox(
+                            width: 150, // Set a minimum width for buttons
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                });
+                                Answers[currentQuestion['id']] = option;
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Answers[currentQuestion['id']]==option?Colors.blue:Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  option,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
+
+
+
+
+                        if (currentQuestion['type'] == 'True/False')
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            // mainAxisAlignment: MainAxisAlignment.center,
+                            children: [                              
+                              ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  Answers[currentQuestion['id']] = 'True';
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Answers[currentQuestion['id']]=='True'?Colors.blue:Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    'True',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  Answers[currentQuestion['id']] = 'False';
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Answers[currentQuestion['id']]=='False'?Colors.blue:Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20.0, // Padding inside the button
+                                  horizontal: 20.0,
+                                ),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                    'False',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+
+                            
+                            ],
+                          ),
+                        if (currentQuestion['type'] == 'Text')
+                          
+                              TextField(
+                                controller: TextEditingController(text: Answers[currentQuestion['id']]),
+                                onChanged: (value) {
+                                  setState(() {
+                                    Answers[currentQuestion['id']] = value;
+                                  });
+                                },
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  hintText: 'Enter your answer',
+                                ),
+                              ),                              
+                            
+                          
+                          
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -177,13 +311,7 @@ class _QuizPageState extends State<QuizPage> {
                       iconSize: 40,
                       color: _currentIndex > 0 ? Colors.blue : Colors.grey,
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Handle submission or logging of the current answer here
-                        print("User answer: $_userAnswer");
-                      },
-                      child: const Text('Submit Answer'),
-                    ),
+                    
                     IconButton(
                       onPressed: () => _goToNextQuestion(questions.length),
                       icon: const Icon(Icons.arrow_right),

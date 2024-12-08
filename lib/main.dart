@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'package:quiz_app/screens/LoginView.dart';
 import 'package:quiz_app/screens/SignupView.dart';
 import 'package:quiz_app/screens/admin/QuizsListPage.dart';
+import 'package:quiz_app/screens/studen/QuizPage.dart'; // Add this line
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
@@ -44,6 +45,8 @@ class MainApp extends StatelessWidget {
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
         '/CreateClass': (context) => const CreateClass(),
+        '/quizPage': (context) => QuizPage(),
+
       },
     );
   }
