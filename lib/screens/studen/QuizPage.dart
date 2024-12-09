@@ -34,7 +34,25 @@ class _QuizPageState extends State<QuizPage> {
     _controller.clear();
   }
 
-  submitForReal() {
+  double calculateGrade( List<Map<String, dynamic>> questions) {
+    var total = questions.length;
+    var correct = 0;
+
+    for (var question in questions) {
+      var id = question['id'];
+      var correctAnswer = question['answer'];
+      var userAnswer = Answers[id];
+
+      if (correctAnswer == userAnswer) {
+        correct++;
+      }
+    }
+
+    return (correct / total) * 10;
+    
+  }
+
+  submitForReal( List<Map<String, dynamic>> questions) {
     var user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       throw Exception('User not found.');
@@ -43,6 +61,8 @@ class _QuizPageState extends State<QuizPage> {
     Answers['user'] = user.uid;
     Answers['timestamp'] = FieldValue.serverTimestamp();
     Answers['exam'] = widget.ExamId;
+    Answers['grade'] = calculateGrade(questions);
+    print(Answers);
 
     FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
 
@@ -57,7 +77,6 @@ class _QuizPageState extends State<QuizPage> {
         .collection('Exams')
         .doc(widget.ExamId)
         .get();
-        print(widget.ExamId);
 
 
     if (!examSnapshot.exists || examSnapshot.data()?['questions'] == null) {
@@ -158,7 +177,7 @@ class _QuizPageState extends State<QuizPage> {
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop(); // Close the dialog
-                                    submitForReal();
+                                    submitForReal(questions);
                                   },
                                   child: const Text('Submit'),
                                 ),
@@ -202,7 +221,7 @@ class _QuizPageState extends State<QuizPage> {
                               onPressed: () {
                                 setState(() {
                                 });
-                                Answers[currentQuestion['id']] = option;
+                                Answers[currentQuestion['id']] == option?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = option;
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Answers[currentQuestion['id']]==option?Colors.blue:Colors.purple,
@@ -238,7 +257,8 @@ class _QuizPageState extends State<QuizPage> {
                               ElevatedButton(
                               onPressed: () {
                                 setState(() {
-                                  Answers[currentQuestion['id']] = 'True';
+                                  Answers[currentQuestion['id']] == 'True'?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = 'True';
+                                  print(Answers);
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -265,7 +285,7 @@ class _QuizPageState extends State<QuizPage> {
                             ElevatedButton(
                               onPressed: () {
                                 setState(() {
-                                  Answers[currentQuestion['id']] = 'False';
+                                  Answers[currentQuestion['id']] == 'False'?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = 'False';
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -299,6 +319,7 @@ class _QuizPageState extends State<QuizPage> {
                                 onChanged: (value) {
                                   setState(() {
                                     Answers[currentQuestion['id']] = value;
+
                                   });
                                 },
                                 decoration: const InputDecoration(
