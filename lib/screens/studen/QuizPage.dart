@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,88 +11,84 @@ class QuizPage extends StatefulWidget {
   @override
   _QuizPageState createState() => _QuizPageState();
   const QuizPage({Key? key, required this.ExamId}) : super(key: key);
-
 }
 
-  
-
-
 class _QuizPageState extends State<QuizPage> {
-  late Future<List<Map<String, dynamic>>> _examFuture; // Cache the future
-  final TextEditingController _controller = TextEditingController();
+  late Future<List<Map<String, dynamic>>> _examFuture;
+  final Map<String, dynamic> _answers = {};
+  int _currentIndex = 0;
+  late DateTime _endTime;
+  late Timer _timer;
+  String _timeRemaining = "00:00";
 
   @override
   void initState() {
     super.initState();
-    _examFuture = getExam(); // Assign the future once in initState
+    _examFuture = getExam();
+    initializeTimer();
   }
 
+  @override
   void dispose() {
-    _controller.dispose(); // Clean up the controller when the widget is removed
+    _timer.cancel();
     super.dispose();
   }
 
-  void _handleNextButtonPress() {
-    _controller.clear();
-  }
-
-  double calculateGrade( List<Map<String, dynamic>> questions) {
-    var total = questions.length;
-    var correct = 0;
-
-    for (var question in questions) {
-      var id = question['id'];
-      var correctAnswer = question['answer'];
-      var userAnswer = Answers[id];
-
-      if (correctAnswer == userAnswer) {
-        correct++;
-      }
-    }
-
-    return (correct / total) * 10;
-    
-  }
-
-  submitForReal( List<Map<String, dynamic>> questions) {
-    var user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User not found.');
-    }
-
-    Answers['user'] = user.uid;
-    Answers['timestamp'] = FieldValue.serverTimestamp();
-    Answers['exam'] = widget.ExamId;
-    Answers['grade'] = calculateGrade(questions);
-    print(Answers);
-    
-    FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
-
-    Navigator.of(context).pop(); // Close the dialog
-    Navigator.of(context).pushReplacementNamed('/homeStudent');
-  }
-
-  var Answers = { };
-
-  Future<List<Map<String, dynamic>>> getExam() async {
-    var examSnapshot = await FirebaseFirestore.instance
+  Future<void> initializeTimer() async {
+    final examData = await FirebaseFirestore.instance
         .collection('Exams')
         .doc(widget.ExamId)
         .get();
+    final startTime = examData['startTime'] as String;
+    final endTime = examData['endTime'] as String;
 
+    final now = DateTime.now();
+    final startDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(startTime.split(":")[0]),
+      int.parse(startTime.split(":")[1]),
+    );
+    _endTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      int.parse(endTime.split(":")[0]),
+      int.parse(endTime.split(":")[1]),
+    );
 
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final remaining = _endTime.difference(DateTime.now());
+      if (remaining.isNegative) {
+        _timer.cancel();
+        submitForReal();
+      } else {
+        setState(() {
+          _timeRemaining =
+              "${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}";
+        });
+      }
+
+    });
+
+  }
+
+  Future<List<Map<String, dynamic>>> getExam() async {
+    final examSnapshot = await FirebaseFirestore.instance
+        .collection('Exams')
+        .doc(widget.ExamId)
+        .get();
     if (!examSnapshot.exists || examSnapshot.data()?['questions'] == null) {
       throw Exception('Exam not found or missing questions field.');
     }
-    var questions = examSnapshot.data()?['questions'] as List<dynamic>;
-
-    var questionSnapshots = await Future.wait(
+    final questions = examSnapshot.data()?['questions'] as List<dynamic>;
+    return Future.wait(
       questions.map((questionId) async {
-        var querySnapshot = await FirebaseFirestore.instance
+        final querySnapshot = await FirebaseFirestore.instance
             .collection('Questions')
             .where('id', isEqualTo: questionId)
             .get();
-
         if (querySnapshot.docs.isNotEmpty) {
           return querySnapshot.docs.first.data();
         } else {
@@ -98,266 +96,277 @@ class _QuizPageState extends State<QuizPage> {
         }
       }).toList(),
     );
-
-    return questionSnapshots;
   }
 
-  int _currentIndex = 0;
 
-  void _goToNextQuestion(int totalQuestions) {
-    if (_currentIndex < totalQuestions - 1) {
-      setState(() {
-        _currentIndex++;
-      });
+  void submitForReal() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    throw Exception('User not found.');
+  }
+  final examSnapshot = await FirebaseFirestore.instance
+      .collection('Exams')
+      .doc(widget.ExamId)
+      .get();
+  final questions = await _examFuture;
+  final grade = calculateGrade(questions);
+ 
+  int totalPoint = questions.fold(0, (sum, question) => sum + (question['points'] as int));
+  final submission = {
+    'user': user.uid,
+    'timestamp': FieldValue.serverTimestamp(),
+    'exam': widget.ExamId,
+    'grade': grade,
+    'totalPoint': totalPoint,
+    'answers': _answers,
+
+  };
+
+  await FirebaseFirestore.instance.collection('Answers').add(submission);
+
+  _showSuccessDialog(context);
+}
+
+void _showSuccessDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Submission Successful"),
+        content: const Text("Your quiz has been submitted successfully."),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop(); 
+              Navigator.of(context).pushReplacementNamed('/homeStudent'); 
+            },
+            icon: const Icon(Icons.check, color: Colors.green),
+            label: const Text("OK"),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.green,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  double calculateGrade(List<Map<String, dynamic>> questions) {
+    var correct = 0;
+    for (var question in questions) {
+      if (question['type'] == 'MCQ' || question['type'] == 'True/False') {
+        final correctOption = question['correctOption'];
+        if (_answers[question['id']] == correctOption) {
+          correct += question['points'] as int? ?? 0;
+        }
+      }
     }
+    return correct.toDouble();
   }
 
-  void _goToPreviousQuestion() {
-    if (_currentIndex > 0) {
-      setState(() {
-        _currentIndex--;
-      });
-    }
-  }
-
-
+void _showSubmitConfirmationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Submit Quiz"),
+        content: const Text("Are you sure you want to submit the quiz?"),
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop(); 
+            },
+            icon: const Icon(Icons.cancel, color: Colors.red),
+            label: const Text("Cancel"),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop(); 
+              submitForReal(); 
+            },
+            icon: const Icon(Icons.check, color: Colors.green),
+            label: const Text("Submit"),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.green,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.purple,
-        title: const Text('Quiz Page'),
+        title: Image.asset('assets/logo.png', height: 50),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-            },
-          ),
+        Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0), // Add margin
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer, color: Colors.white), // Add icon
+                  const SizedBox(width: 8), // Add space between icon and text
+                  Text(
+                    _timeRemaining,
+                    style: const TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          )
         ],
       ),
-      body: 
-      FutureBuilder<List<Map<String, dynamic>>>(
-        future: _examFuture, // Use cached future
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _examFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text(
-                "No quizzes available.",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
-            );
+            return const Center(child: Text("No quizzes available."));
           }
+          final questions = snapshot.data!;
+          final currentQuestion = questions[_currentIndex];
 
-          var questions = snapshot.data!;
-          var currentQuestion = questions[_currentIndex];
-
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-               ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text('Submit Answers'),
-                              content: const Text('Are you sure you want to submit your answers?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // Close the dialog
-                                  },
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // Close the dialog
-                                    submitForReal(questions);
-                                  },
-                                  child: const Text('Submit'),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        print(Answers);
-                        },
-                      child: const Text('Submit Answers'),
+          return Container(
+            margin: EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(10),
             ),
-              Expanded(
-                child: Center(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    "Question ${_currentIndex + 1} of ${questions.length}",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           currentQuestion['text'],
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(fontSize: 20 , fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
+                        if (currentQuestion['type'] == 'True/False') ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _answers[currentQuestion['id']] = 'True';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _answers[currentQuestion['id']] == 'True'
+                                      ? Colors.green
+                                      : Colors.white,
+                                ),
+                                child: const Text('True'),
+                              ),
+                              const SizedBox(width: 20),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _answers[currentQuestion['id']] = 'False';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _answers[currentQuestion['id']] == 'False'
+                                      ? Colors.red
+                                      :  Colors.white,
+                                ),
+                                child: const Text('False'),
+                              ),
+                            ],
+                          ),
+                        ] else if (currentQuestion['type'] == 'MCQ') ...[
+                          Wrap(
+                            spacing: 10,
+                            children: (currentQuestion['options'] ?? [])
+                                .map<Widget>(
+                                  (option) => ChoiceChip(
+                                    label: Text(option),
+                                    selected: _answers[currentQuestion['id']] == option,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        _answers[currentQuestion['id']] =
+                                            selected ? option : null;
+                                      });
+                                    },
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ] else if (currentQuestion['type'] == 'Text') ...[
+                          TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                _answers[currentQuestion['id']] = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Enter your answer',
+                            ),
+                          ),
+                        ] else ...[
+                          Text('Unknown question type: ${currentQuestion['type']}'),
+                        ],
                       ],
                     ),
                   ),
                 ),
-              ),
-               if (currentQuestion['type'] == 'MCQ')
-                Wrap(
-                  spacing: 20.0, // Space between buttons horizontally
-                  runSpacing: 10.0, // Space between rows of buttons
-                  children: currentQuestion['options']
-                      .map<Widget>((option) => SizedBox(
-                            width: 150, // Set a minimum width for buttons
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                });
-                                Answers[currentQuestion['id']] == option?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = option;
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Answers[currentQuestion['id']]==option?Colors.blue:Colors.purple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, // Padding inside the button
-                                  horizontal: 20.0,
-                                ),
-                              ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  option,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ))
-                      .toList(),
-                ),
-
-
-
-
-                        if (currentQuestion['type'] == 'True/False')
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            // mainAxisAlignment: MainAxisAlignment.center,
-                            children: [                              
-                              ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  Answers[currentQuestion['id']] == 'True'?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = 'True';
-                                  print(Answers);
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Answers[currentQuestion['id']]=='True'?Colors.blue:Colors.purple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, // Padding inside the button
-                                  horizontal: 20.0,
-                                ),
-                              ),
-                              child: const FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                    'True',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  Answers[currentQuestion['id']] == 'False'?Answers[currentQuestion['id']] = '': Answers[currentQuestion['id']] = 'False';
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Answers[currentQuestion['id']]=='False'?Colors.blue:Colors.purple,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0, // Padding inside the button
-                                  horizontal: 20.0,
-                                ),
-                              ),
-                              child: const FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                    'False',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-
-                            
-                            ],
-                          ),
-                        if (currentQuestion['type'] == 'Text')
-                          
-                              TextField(
-                                controller: TextEditingController(text: Answers[currentQuestion['id']]),
-                                onChanged: (value) {
-                                  setState(() {
-                                    Answers[currentQuestion['id']] = value;
-
-                                  });
-                                },
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  hintText: 'Enter your answer',
-                                ),
-                              ),                              
-                            
-                          
-                          
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      onPressed: _goToPreviousQuestion,
-                      icon: const Icon(Icons.arrow_left),
-                      iconSize: 40,
-                      color: _currentIndex > 0 ? Colors.blue : Colors.grey,
+                      icon: const Icon(Icons.arrow_back , color: Colors.purple , size: 50),
+                      onPressed: _currentIndex > 0
+                          ? () => setState(() => _currentIndex--)
+                          : null,
                     ),
-                    
+                    if (_currentIndex == questions.length - 1)
+                    ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                          ),
+                          onPressed: () {
+                            _showSubmitConfirmationDialog(context);
+                          },
+                          child: const Text("Submit" , style: TextStyle(fontSize: 20 , color: Colors.white)),
+                        ),
                     IconButton(
-                      onPressed: () => _goToNextQuestion(questions.length),
-                      icon: const Icon(Icons.arrow_right),
-                      iconSize: 40,
-                      color: _currentIndex < questions.length - 1
-                          ? Colors.blue
-                          : Colors.grey,
+                      icon: const Icon(Icons.arrow_forward , color: Colors.purple , size: 50),
+                      onPressed: _currentIndex < questions.length - 1
+                          ? () => setState(() => _currentIndex++)
+                          : null,
                     ),
-
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
   }
 }
+
+

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quiz_app/screens/studen/NavViewStudent.dart';
 import 'package:quiz_app/screens/studen/QuizzesPage.dart';
+import 'package:quiz_app/screens/studen/StudentNotifPage.dart';
 import 'StudentJoinClass.dart';
 
 class HomeViewStudent extends StatefulWidget {
@@ -90,12 +91,14 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
         
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout , color: Colors.white) ,
-            onPressed: () async {
-              await _auth.signOut();
-              Navigator.of(context).pop();
+            icon: const Icon(Icons.notifications , color: Colors.white),
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => StudentNotifPage(),
+              ));
             },
           ),
+       
         ],
       ),
       drawer:
