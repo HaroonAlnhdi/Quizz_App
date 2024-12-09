@@ -1,6 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:quiz_app/screens/studen/NavViewStudent.dart';
+import 'package:quiz_app/screens/studen/QuizzesPage.dart';
+import 'StudentJoinClass.dart';
 
 class HomeViewStudent extends StatefulWidget {
   const HomeViewStudent({Key? key}) : super(key: key);
@@ -12,7 +15,7 @@ class HomeViewStudent extends StatefulWidget {
 class _HomeViewStudentState extends State<HomeViewStudent> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  int _selectedIndex = 0; // Current index for the nav bar
+  int _selectedIndex = 0; // Current index for navigation (0 = Home, 1 = Profile)
 
   Future<Map<String, dynamic>> _getUserInfo() async {
     User? user = _auth.currentUser;
@@ -32,7 +35,7 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
           .where('students', arrayContains: user.uid)
           .get();
       return classSnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => {...(doc.data() as Map<String, dynamic>), 'id': doc.id})
           .toList();
     }
     return [];
@@ -53,8 +56,8 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
             .doc(classId)
             .update({'students': FieldValue.arrayUnion([user.uid])});
 
-        if (!mounted) return; // Prevent UI updates on disposed widgets
-        setState(() {});
+        if (!mounted) return;
+        setState(() {}); // Refresh UI
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Successfully joined the class!')),
         );
@@ -67,9 +70,10 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
     }
   }
 
-  void _onItemTapped(int index) {
+  void _onDrawerItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      Navigator.of(context).pop();
     });
   }
 
@@ -77,248 +81,327 @@ class _HomeViewStudentState extends State<HomeViewStudent> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Student Dashboard'),
+        centerTitle: true,
+        title: const Text(
+          'Student Dashboard',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.purple,
+        
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout , color: Colors.white) ,
+            onPressed: () async {
+              await _auth.signOut();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+      drawer:
+       NavViewStudent(
+        getUserInfo: _getUserInfo,
+        onDrawerItemTapped: _onDrawerItemTapped,
       ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // Home screen content
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FutureBuilder<Map<String, dynamic>>(
-                  future: _getUserInfo(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      );
-                    } else if (snapshot.hasError || snapshot.data == null) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Error fetching user info'),
-                      );
-                    } else {
-                      final userInfo = snapshot.data!;
-                      return Card(
-                        elevation: 4,
-                        margin: const EdgeInsets.all(16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        color: Colors.purple.shade100,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.person, color: Colors.purple),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${userInfo['firstName'] ?? 'N/A'} ${userInfo['lastName'] ?? 'N/A'}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.email, color: Colors.purple),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    userInfo['email'] ?? 'No email available',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-                FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _getStudentClasses(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      );
-                    } else if (snapshot.hasError || snapshot.data == null) {
-                      return const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('Error fetching classes'),
-                      );
-                    } else {
-                      final classes = snapshot.data!;
-                      return Column(
-                        children: [
-                          for (var classInfo in classes)
-                            ExpansionTile(
-                              title: Text(
-                                classInfo['name'] ?? 'Class Name',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                  'Course Number: ${classInfo['number'] ?? 'N/A'}'),
-                              children: [
-                                ListTile(
-                                  title: const Text('Class Code'),
-                                  subtitle: Text(classInfo['code'] ?? 'N/A'),
-                                ),
-                              ],
-                            ),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          // Profile screen placeholder
-          FutureBuilder<Map<String, dynamic>>(
-              future: _getUserInfo(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else if (snapshot.hasError || snapshot.data == null) {
-                  return const Center(
-                    child: Text(
-                      'Error fetching profile info',
-                      style: TextStyle(fontSize: 16, color: Colors.red),
-                    ),
-                  );
-                } else {
-                  final userInfo = snapshot.data!;
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+          
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FutureBuilder<Map<String, dynamic>>(
+                future: _getUserInfo(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (snapshot.hasError || snapshot.data == null) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('Error fetching user info'),
+                    );
+                  } else {
+                    final userInfo = snapshot.data!;
+                    return Card(
                       elevation: 4,
+                      margin: const EdgeInsets.all(16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      color: Colors.purple.shade100,
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.blue.shade700,
-                                ),
-                                const SizedBox(width: 16),
+                                const Icon(Icons.person, color: Colors.purple),
+                                const SizedBox(width: 8),
                                 Text(
-                                  'Profile Info',
-                                  style: TextStyle(
-                                    fontSize: 20,
+                                  '${userInfo['firstName'] ?? 'N/A'} ${userInfo['lastName'] ?? 'N/A'}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue.shade700,
                                   ),
                                 ),
                               ],
                             ),
-                            const Divider(height: 24, thickness: 1),
-                            Text(
-                              'First Name: ${userInfo['firstName'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
                             const SizedBox(height: 8),
-                            Text(
-                              'Second Name: ${userInfo['lastName'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Email: ${userInfo['email'] ?? 'N/A'}',
-                              style: const TextStyle(fontSize: 16, color: Colors.black54),
+                            Row(
+                              children: [
+                                const Icon(Icons.email, color: Colors.purple),
+                                const SizedBox(width: 8),
+                                Text(
+                                  userInfo['email'] ?? 'No email available',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
-
-
-        ],
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.purple,
-        onTap: _onItemTapped,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          String? classCode = await showDialog<String>(
-            context: context,
-            builder: (context) {
-              TextEditingController controller = TextEditingController();
-              return AlertDialog(
-                title: const Text('Join Class'),
-                content: TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter class code',
-                  ),
+                    );
+                  }
+                },
+              ),
+              Container(
+                alignment: Alignment.center,
+              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.0),
+              padding: const EdgeInsets.all(8.0),
+               width: double.infinity,
+              decoration: BoxDecoration(   
+                color: Colors.purple.shade50,
+              ),
+             child: const Text(
+                'Your Classes ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple,
+                  
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, null),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, controller.text),
-                    child: const Text('Join'),
-                  ),
-                   ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/quizPage');
-          },
-          child: Text('Go to Quiz Page'),
-        ),
-                ],
-              );
-            },
+              ),
+              ),
+            Expanded(
+  child: FutureBuilder<List<Map<String, dynamic>>>(
+    future: _getStudentClasses(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      } else if (snapshot.hasError || snapshot.data == null) {
+        return const Center(child: Text("Error fetching classes."));
+      } else {
+        final classes = snapshot.data!;
+        if (classes.isEmpty) {
+          return const Center(
+            child: Text(
+              "No classes found.",
+              style: TextStyle(fontSize: 18),
+            ),
           );
+        }
 
-          if (classCode != null && classCode.isNotEmpty) {
-            _joinClass(classCode);
-          }
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.purple,
+        return ListView.builder(
+          itemCount: classes.length,
+          itemBuilder: (BuildContext context, int index) {
+            final classInfo = classes[index];
+            return InkWell(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ClassDetailPage(
+                    heroTag: index,
+                    classInfo: classInfo,
+                  ),
+                ));
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 15.0),
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  border: Border.all(color: Colors.purple, width: 1.0),
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                child: Row(
+                  children: [
+                    Hero(
+                      tag: index,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.purple.shade100,
+                        child: const Icon(Icons.class_, size: 40, color: Colors.purple),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            classInfo['name'] ?? 'Class Name',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Text(
+                            'Course Number: ${classInfo['number'] ?? 'N/A'}',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      }
+    },
+  ),
+)
+            ],
+          ),
+          // Profile screen
+          FutureBuilder<Map<String, dynamic>>(
+            future: _getUserInfo(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError || snapshot.data == null) {
+                return const Center(
+                  child: Text(
+                    'Error fetching profile info',
+                    style: TextStyle(fontSize: 16, color: Colors.red),
+                  ),
+                );
+              } else {
+                final userInfo = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.person,
+                                  size: 40, color: Colors.blue.shade700),
+                              const SizedBox(width: 16),
+                              Text(
+                                'Profile Info',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Divider(height: 24, thickness: 1),
+                          Text(
+                            'First Name: ${userInfo['firstName'] ?? 'N/A'}',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Last Name: ${userInfo['lastName'] ?? 'N/A'}',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Email: ${userInfo['email'] ?? 'N/A'}',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      floatingActionButton: StudentJoinClass(
+        onJoinClass: _joinClass,
+      ),
+    );
+  }
+}
 
+class ClassDetailPage extends StatelessWidget {
+  final int heroTag;
+  final Map<String, dynamic> classInfo;
+
+  const ClassDetailPage({Key? key, required this.heroTag, required this.classInfo})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(classInfo['name'] ?? "Class Details")),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Hero(
+                tag: heroTag,
+                child: CircleAvatar(
+                  radius: 80,
+                  backgroundColor: Colors.purple.shade100,
+                  child: const Icon(Icons.class_, size: 80, color: Colors.purple),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Class Name: ${classInfo['name'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Course Number: ${classInfo['number'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Class Code: ${classInfo['code'] ?? 'N/A'}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            QuizzesPage(classId: classInfo['id']),
+                      ));
+                    },
+                    icon: const Icon(Icons.quiz),
+                    label: const Text('View Quizzes'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

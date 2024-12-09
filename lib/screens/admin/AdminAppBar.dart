@@ -7,10 +7,13 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   // Add this property to track unread notifications
 
+
   const AdminAppBar({
     Key? key,
     required this.title,
   }) : super(key: key);
+
+
 
   @override
   Widget build(BuildContext context) {

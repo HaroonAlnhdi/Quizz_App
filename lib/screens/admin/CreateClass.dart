@@ -66,12 +66,33 @@ class _CreateClassState extends State<CreateClass> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Row(
+                children: [
+                  Icon(Icons.arrow_back),
+                  SizedBox(width: 4),
+                  Text('Back'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 5.0),
+            const Text(
+              'Create a new class',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF7826B5),
+              ),
+            ),
             TextField(
               controller: _classNumberController,
               decoration: const InputDecoration(
-                labelText: 'Class Number',
+                labelText: 'Class Code',
               ),
             ),
             TextField(
@@ -82,10 +103,21 @@ class _CreateClassState extends State<CreateClass> {
             ),
             const SizedBox(height: 20.0),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+               backgroundColor: Color(0xFF7826B5),
+              ),
               onPressed: _addClass,
-              child: const Text('Add Class'),
+              child: const Text('Add Class' , style: TextStyle(color: Colors.white ),),
             ),
             const SizedBox(height: 20.0),
+            const Text(
+              'Classes : ',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF7826B5),
+              ),
+            ),
             Expanded(
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
@@ -111,44 +143,83 @@ class _CreateClassState extends State<CreateClass> {
                       var doc = snapshot.data!.docs[index];
                       var classData = doc.data() as Map<String, dynamic>;
 
-                      return ListTile(
-                        title: Text(
-                          'Class Number: ${classData['number']}',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                      return Card(
+                        elevation: 5,
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        subtitle: Text(
-                          'Class Name: ${classData['name']}',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Clipboard.setData(
-                                    ClipboardData(text: classData['code']));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          'Code copied to clipboard: ${classData['code']}')),
-                                );
-                              },
-                              child: Text(
-                                'Code: ${classData['code']}',
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  decoration: TextDecoration.underline,
-                                ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Class Code: ${classData['number']}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red),
+                                    onPressed: () => _deleteClass(doc.id),
+                                  ),
+                                ],
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deleteClass(doc.id),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Text(
+                                'Class Name: ${classData['name']}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () {
+                                      Clipboard.setData(ClipboardData(
+                                          text: classData['code']));
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Code copied to clipboard: ${classData['code']}' , style: TextStyle(color: Colors.white),
+                                              
+                                              ),
+                                          backgroundColor: Colors.blue,
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Code: ${classData['code']}',
+                                      style: const TextStyle(
+                                        color: Colors.blue,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _navigateToClassDetails(doc),
+                                    icon: const Icon(Icons.arrow_forward),
+                                    label: const Text('Details'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Color(0xFF7826B5),
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        onTap: () => _navigateToClassDetails(doc),
                       );
                     },
                   );
@@ -174,6 +245,8 @@ class _CreateClassState extends State<CreateClass> {
   }
 }
 
+
+
 class ClassDetailsPage extends StatelessWidget {
   final String docId;
 
@@ -196,40 +269,19 @@ class ClassDetailsPage extends StatelessWidget {
         .collection('classes')
         .doc(docId)
         .update({'students': students});
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$studentName has been removed from the class')),
+      SnackBar(
+        content: Text('$studentName has been removed from the class'),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Class Details'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: StreamBuilder<DocumentSnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('classes')
-                    .doc(docId)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Text('');
-                  }
-                  var classData = snapshot.data!.data() as Map<String, dynamic>;
-                  return Text(
-                    'Students: ${classData['students']?.length ?? 0}',
-                    style: const TextStyle(fontSize: 18),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: const AdminAppBar(title: 'Class Details'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: StreamBuilder<DocumentSnapshot>(
@@ -252,35 +304,97 @@ class ClassDetailsPage extends StatelessWidget {
                 }).toList() ??
                 [];
 
-            return Column(
-              children: [
-                Text(
-                  'Class Number: ${classData['number']}',
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Class Name: ${classData['name']}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: students.length,
-                    itemBuilder: (context, index) {
-                      final student = students[index] as Map<String, dynamic>;
-                      return ListTile(
-                        title: Text('Student: ${student['name']}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () =>
-                              _deleteStudent(context, student['name']),
-                        ),
-                      );
-                    },
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Class Information Section
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Class Code: ${classData['number']}',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Class Name: ${classData['name']}',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Total Students: ${students.length}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  // Students Section
+                  const Text(
+                    'Students',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  students.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No students have been added to this class.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: students.length,
+                          itemBuilder: (context, index) {
+                            final student =
+                                students[index] as Map<String, dynamic>;
+                            return Card(
+                              margin:
+                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                title: Text(
+                                  student['name'],
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () => _deleteStudent(
+                                      context, student['name']),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ],
+              ),
             );
           },
         ),

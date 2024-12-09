@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:quiz_app/screens/admin/NewExamGradesPage.dart';
+import 'package:quiz_app/screens/studen/QuizzesPage.dart';
 
-import 'package:quiz_app/firebase_options.dart';
 import 'firebase_options.dart';
 
 // Routes
 import 'package:quiz_app/screens/LoginView.dart';
 import 'package:quiz_app/screens/SignupView.dart';
 import 'package:quiz_app/screens/admin/QuizsListPage.dart';
+import 'package:quiz_app/screens/studen/QuizPage.dart'; // Add this line
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
+
 import 'package:quiz_app/screens/admin/CreateClass.dart';
 import 'package:quiz_app/screens/admin/NotifPage.dart'; //notif page
 
 //student
+
 
 import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
 import 'package:quiz_app/screens/studen/QuizPage.dart';
@@ -24,6 +28,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(const MainApp());
 }
 
@@ -48,7 +53,16 @@ class MainApp extends StatelessWidget {
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
         '/CreateClass': (context) => const CreateClass(),
-        '/quizPage': (context) => const QuizPage(),
+
+        '/quizPage': (context) {
+          final examId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (examId == null) {
+            throw Exception("ExamId is required to navigate to QuizPage.");
+          }
+          return QuizPage(ExamId: examId);
+        },
+        '/newExamGrades': (context) => const NewExamGradesPage(),
+
       },
     );
   }

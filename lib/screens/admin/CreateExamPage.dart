@@ -20,8 +20,13 @@ class _CreateExamPageState extends State<CreateExamPage> {
       TextEditingController();
   final TextEditingController _quizDateController = TextEditingController();
   final List<Map<String, dynamic>> _questions = [];
+
+  final TextEditingController pointController = TextEditingController();
+  final TextEditingController imageUrlController = TextEditingController();
+
   bool _isLoading = false;
   int _currentStep = 0;
+  bool _randomization = false;
 
   String questionType = 'MCQ'; // Default type
   final TextEditingController questionController = TextEditingController();
@@ -32,6 +37,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
   final TextEditingController correctOptionController = TextEditingController();
   bool isTrue = true;
   bool showForm = false;
+  String? _classId;
 
   String? _getUserEmail() {
     final user = FirebaseAuth.instance.currentUser;
@@ -55,6 +61,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
           'submissionLimit': int.tryParse(_submissionLimitController.text) ?? 1,
           'quizDate': _quizDateController.text,
           'createdAt': Timestamp.now(),
+          'class': _classId,
+          'randomization': _randomization,
         });
 
         List<String> questionIds = [];
@@ -76,7 +84,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Exam created successfully!'),
+              content: Text('Quiz created successfully!'),
               backgroundColor: Colors.green),
         );
 
@@ -84,6 +92,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
         setState(() {
           _questions.clear();
         });
+          Navigator.pushReplacementNamed(context, '/homeAdmin');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -178,12 +187,12 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     SizedBox(width: 1),
                     ElevatedButton(
                       onPressed: details.onStepContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF7826B5),
+                      ),
                       child: Text(
                         _currentStep == 1 ? 'Create Exam' : 'Next',
                         style: const TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF7826B5),
                       ),
                     ),
                   ],
@@ -191,15 +200,24 @@ class _CreateExamPageState extends State<CreateExamPage> {
               },
               steps: [
                 Step(
-                  title: const Text('Exam Details'),
+                  title: const Text('Quiz Details'),
                   content: Form(
                     key: _formKey,
                     child: Column(
                       children: [
+                        const Text(
+                          'Enter Quiz Details',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7826B5),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         TextFormField(
                           controller: _titleController,
                           decoration: const InputDecoration(
-                            labelText: 'Exam Title',
+                            labelText: 'Quiz Title',
                             prefixIcon:
                                 Icon(Icons.title, color: Color(0xFF7826B5)),
                             border: OutlineInputBorder(),
@@ -270,7 +288,7 @@ class _CreateExamPageState extends State<CreateExamPage> {
                         TextFormField(
                           controller: _submissionLimitController,
                           decoration: const InputDecoration(
-                            labelText: 'Submission Limit',
+                            labelText: 'attempts',
                             prefixIcon: Icon(Icons.format_list_numbered,
                                 color: Color(0xFF7826B5)),
                             border: OutlineInputBorder(),
@@ -315,6 +333,105 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             }
                             return null;
                           },
+                        ),
+                        const SizedBox(height: 16),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('classes')
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const CircularProgressIndicator();
+                            }
+                            var classList = snapshot.data!.docs.map((doc) {
+                              return DropdownMenuItem<String>(
+                                value: doc.id,
+                                child: Text(doc['name']),
+                              );
+                            }).toList();
+                            return DropdownButtonFormField<String>(
+                              decoration: const InputDecoration(
+                                labelText: 'Select Class',
+                                prefixIcon: Icon(Icons.class_,
+                                    color: Color(0xFF7826B5)),
+                                border: OutlineInputBorder(),
+                              ),
+                              items: classList,
+                              onChanged: (value) {
+                                setState(() {
+                                  _classId = value!;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a class';
+                                }
+                                return null;
+                              },
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons
+                                              .shuffle, // Choose an appropriate icon
+                                          color: Color(0xFF7826B5),
+                                        ),
+                                        SizedBox(
+                                            width:
+                                                8), // Add some space between the icon and text
+                                        Text(
+                                          'Randomize Questions',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF7826B5),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        _randomization
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: _randomization
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                      Switch(
+                                        value: _randomization,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _randomization = value;
+                                          });
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -439,6 +556,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 15),
+               
                 if (questionType == 'MCQ') ...[
                   const SizedBox(height: 16),
                   TextField(
@@ -509,6 +628,25 @@ class _CreateExamPageState extends State<CreateExamPage> {
                     },
                   ),
                 ],
+                 const SizedBox(height: 16),
+                  TextField(
+                  controller: pointController,
+                  decoration: const InputDecoration(
+                    labelText: 'Points',
+                    prefixIcon: Icon(Icons.score),
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: imageUrlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Image URL',
+                    prefixIcon: Icon(Icons.image),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -532,6 +670,8 @@ class _CreateExamPageState extends State<CreateExamPage> {
                             'id': UniqueKey().toString(),
                             'text': questionController.text,
                             'type': questionType,
+                            'points': int.tryParse(pointController.text) ?? 0,
+                            'imageUrl': imageUrlController.text,
                             'options': questionType == 'MCQ'
                                 ? [
                                     optionAController.text,
