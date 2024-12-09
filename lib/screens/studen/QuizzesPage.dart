@@ -147,7 +147,7 @@ bool _isQuizAccessible(Map<String, dynamic> quiz) {
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
-          'Student Dashboard',
+          'Student Quizzes',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.purple,
@@ -155,9 +155,8 @@ bool _isQuizAccessible(Map<String, dynamic> quiz) {
           IconButton(
               onPressed: () {}, icon: const Icon(Icons.notifications, color: Colors.white)),
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
             onPressed: () async {
-              await _auth.signOut();
               Navigator.of(context).pop();
             },
           ),

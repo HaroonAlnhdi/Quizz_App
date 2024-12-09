@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'AdminAppBar.dart';
 
-class NotifPage extends StatefulWidget {
-  const NotifPage({super.key});
+class StudentNotifPage extends StatefulWidget {
+  const StudentNotifPage({super.key});
 
   @override
-  State<NotifPage> createState() => _NotifPageState();
+  State<StudentNotifPage> createState() => _StudentNotifPageState();
 }
 
-class _NotifPageState extends State<NotifPage> {
+class _StudentNotifPageState extends State<StudentNotifPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -50,7 +49,12 @@ class _NotifPageState extends State<NotifPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AdminAppBar(title: 'Notifications'),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Student Notifications' , style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.purple,
+       
+      ),
       body: StreamBuilder<List<DocumentSnapshot>>(
         stream: _getNotifications(),
         builder: (context, snapshot) {
@@ -87,14 +91,31 @@ class _NotifPageState extends State<NotifPage> {
                   itemBuilder: (context, index) {
                     var notification =
                         notifications[index].data() as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(notification['title']),
-                      subtitle: const Text('Status: Completed'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _clearNotification(notifications[index].id);
-                        },
+                    // Use the date and time strings directly
+                    String quizDate = notification['quizDate'] ?? 'No Date';
+                    String startTime = notification['startTime'];
+                    String endTime = notification['endTime'];
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4.0),
+                      child: Card(
+                        elevation: 4.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ListTile(
+                          title: Text(notification['title']),
+                          subtitle: Text(
+                            'Created by: ${notification['createdBy']}\nDate: $quizDate\nStart Time: $startTime\nEnd Time: $endTime',
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _clearNotification(notifications[index].id);
+                            },
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -103,18 +124,6 @@ class _NotifPageState extends State<NotifPage> {
             ],
           );
         },
-      ),
-      bottomSheet: Container(
-        width: double.infinity,
-        color: Color(0xFF7826b5),
-        height: 50,
-        child: TextButton.icon(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          label: const Text('Back', style: TextStyle(color: Colors.white)),
-        ),
       ),
     );
   }
