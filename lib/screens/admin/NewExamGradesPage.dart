@@ -65,26 +65,70 @@ class NewExamGradesPage extends StatelessWidget {
 
                         var exams = ExamSnapshot.data!;
                         return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: exams.map((exam) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${exam['title']}',
-                                      textAlign: TextAlign.left,
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                  // Fetch and show grade here
-                                ],
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: exams.map((exam) {
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            child: ExpansionTile(
+                              title: Text(
+                                '${exam['title']}',
+                                textAlign: TextAlign.left,
+                                style: const TextStyle(fontSize: 16),
                               ),
-                            );
-                          }).toList(),
-                        );
+                              children: [
+                                FutureBuilder<List<Map<String, String>>>(
+                                  future: getAnswers(exam['id']),
+                                  builder: (context, gradeSnapshot) {
+                                    if (gradeSnapshot.connectionState == ConnectionState.waiting) {
+                                      return const Center(child: CircularProgressIndicator());
+                                    }
+
+                                    if (gradeSnapshot.hasError) {
+                                      return Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('Error: ${gradeSnapshot.error}'),
+                                      );
+                                    }
+
+                                    if (!gradeSnapshot.hasData || gradeSnapshot.data!.isEmpty) {
+                                      return const Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: Text('No grades found.'),
+                                      );
+                                    }
+
+                                    var grades = gradeSnapshot.data!;
+                                    return Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: grades.map((grade) {
+    return ListTile(
+      title: FutureBuilder<String>(
+        future: getUserName(grade['user']),
+        builder: (context, userSnapshot) {
+          if (userSnapshot.connectionState == ConnectionState.waiting) {
+            return const Text('Loading user...');
+          }
+
+          if (userSnapshot.hasError) {
+            return const Text('Error loading user');
+          }
+
+          return Text(userSnapshot.data ?? 'Unknown User');
+        },
+      ),
+      subtitle: Text('Grade: ${grade['grade']}'),
+    );
+  }).toList(),
+);
+
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      );
+
                       },
                     ),
                   ],
@@ -154,13 +198,15 @@ class NewExamGradesPage extends StatelessWidget {
     List<Map<String, String>> grades = [];
     try {
       QuerySnapshot gradeQuery = await FirebaseFirestore.instance
-          .collection('grades')
+          .collection('Answers')
           .where('exam', isEqualTo: examCode)
           .get();
+        print(examCode);
+        print(gradeQuery.docs);
 
       for (var doc in gradeQuery.docs) {
         grades.add({
-          'grade': doc['grade'],
+          'grade': doc['grade'].toString(),
           'user': doc['user'],
         });
       }
@@ -168,5 +214,28 @@ class NewExamGradesPage extends StatelessWidget {
       print('Error fetching grades: $e');
     }
     return grades;
+  }
+
+  Future<String> getUserName(String? userId) async {
+    if (userId == null) {
+      return 'Unknown User';
+    }
+
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists) {
+        String firstName = userDoc['firstName'] ?? 'Unknown';
+        String lastName = userDoc['lastName'] ?? 'User';
+        return '$firstName $lastName';
+      }
+    } catch (e) {
+      print('Error fetching user name: $e');
+    }
+
+    return 'Unknown User';
   }
 }

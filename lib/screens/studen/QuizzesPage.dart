@@ -25,7 +25,7 @@ class QuizzesPage extends StatelessWidget {
 
     if (quizSnapshot.exists) {
       Map<String, dynamic>? data = quizSnapshot.data() as Map<String, dynamic>?;
-      return data?['submissionLimit'] ?? 0; // Default to 0 if not set
+      return data?['submissionLimit'] ?? 1; // Default to 0 if not set
     }
     return 0; // If the quiz doesn't have a record, default to 0
   }
