@@ -16,6 +16,36 @@ class QuizzesPage extends StatelessWidget {
         .toList();
   }
 
+  Future<int> _getSubmissionLimit(String quizId) async {
+    // Fetch the submission limit for the specific quiz and user
+    DocumentSnapshot quizSnapshot = await FirebaseFirestore.instance
+        .collection('Submissions')
+        .doc(quizId)
+        .get();
+
+    if (quizSnapshot.exists) {
+      Map<String, dynamic>? data = quizSnapshot.data() as Map<String, dynamic>?;
+      return data?['submissionLimit'] ?? 0; // Default to 0 if not set
+    }
+    return 0; // If the quiz doesn't have a record, default to 0
+  }
+
+  Future<void> _reduceSubmissionLimit(String quizId) async {
+    // Reduce the submission limit by 1
+    DocumentReference quizRef =
+        FirebaseFirestore.instance.collection('Submissions').doc(quizId);
+
+    DocumentSnapshot snapshot = await quizRef.get();
+    if (snapshot.exists) {
+      Map<String, dynamic>? data = snapshot.data() as Map<String, dynamic>?;
+      int currentLimit = data?['submissionLimit'] ?? 0;
+
+      if (currentLimit > 0) {
+        await quizRef.update({'submissionLimit': currentLimit - 1});
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,16 +68,45 @@ class QuizzesPage extends StatelessWidget {
               itemCount: quizzes.length,
               itemBuilder: (context, index) {
                 final quiz = quizzes[index];
-                return ListTile(
-                  title: Text(quiz['title'] ?? 'Untitled Quiz'),
-                  subtitle: Text('Date: ${quiz['quizDate']}'),
-                  onTap: () {
-                    print(quiz['id']);
-                    Navigator.pushNamed(
-                      context,
-                      '/quizPage',
-                      arguments: quiz['id'],
-                    );
+                return FutureBuilder<int>(
+                  future: _getSubmissionLimit(quiz['id']),
+                  builder: (context, limitSnapshot) {
+                    if (limitSnapshot.connectionState == ConnectionState.waiting) {
+                      return const ListTile(
+                        title: Text('Loading...'),
+                        subtitle: Text('Please wait...'),
+                      );
+                    } else if (limitSnapshot.hasError) {
+                      return ListTile(
+                        title: Text(quiz['title'] ?? 'Untitled Quiz'),
+                        subtitle: const Text('Error fetching submission limit'),
+                      );
+                    } else {
+                      final submissionLimit = limitSnapshot.data ?? 0;
+                      return ListTile(
+                        title: Text(quiz['title'] ?? 'Untitled Quiz'),
+                        subtitle: Text('Date: ${quiz['quizDate']} | Attempts left: $submissionLimit'),
+                        onTap: submissionLimit > 0
+                            ? () async {
+                                await _reduceSubmissionLimit(quiz['id']);
+                                Navigator.pushNamed(
+                                  context,
+                                  '/quizPage',
+                                  arguments: quiz['id'],
+                                );
+                              }
+                            : () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'You have reached the maximum number of attempts for this quiz.',
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              },
+                      );
+                    }
                   },
                 );
               },
