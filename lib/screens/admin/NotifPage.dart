@@ -62,7 +62,7 @@ class _NotifPageState extends State<NotifPage> {
                       backgroundColor: Color(0xFF7826b5),
                     ),
                     onPressed: () {
-                      _clearAllNotifications(quizzes);
+                      
                     },
                     child: const Text(
                       'Clear All Notifications',
@@ -81,7 +81,7 @@ class _NotifPageState extends State<NotifPage> {
                       trailing: IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () {
-                          _clearNotification(quizzes[index].id);
+                        
                         },
                       ),
                     );

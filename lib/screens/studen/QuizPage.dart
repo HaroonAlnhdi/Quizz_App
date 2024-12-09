@@ -62,6 +62,8 @@ class _QuizPageState extends State<QuizPage> {
     Answers['timestamp'] = FieldValue.serverTimestamp();
     Answers['exam'] = widget.ExamId;
     Answers['grade'] = calculateGrade(questions);
+    var submitted = 0;
+    Answers['submitted'] = submitted +1 ;
     print(Answers);
 
     FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
