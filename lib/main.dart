@@ -13,8 +13,15 @@ import 'package:quiz_app/screens/studen/QuizPage.dart'; // Add this line
 import 'package:quiz_app/screens/splashView.dart';
 import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
-import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
+
 import 'package:quiz_app/screens/admin/CreateClass.dart';
+import 'package:quiz_app/screens/admin/NotifPage.dart'; //notif page
+
+//student
+
+
+import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
+import 'package:quiz_app/screens/studen/QuizPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +53,7 @@ class MainApp extends StatelessWidget {
         '/homeStudent': (context) => const HomeViewStudent(),
         '/QuizsListPage': (context) => const QuizsListPage(),
         '/CreateClass': (context) => const CreateClass(),
+
         '/quizPage': (context) {
           final examId = ModalRoute.of(context)?.settings.arguments as String?;
           if (examId == null) {
@@ -54,6 +62,7 @@ class MainApp extends StatelessWidget {
           return QuizPage(ExamId: examId);
         },
         '/newExamGrades': (context) => const NewExamGradesPage(),
+
       },
     );
   }
