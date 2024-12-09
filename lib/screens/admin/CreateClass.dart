@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 
 class CreateClass extends StatefulWidget {
@@ -32,6 +33,7 @@ class _CreateClassState extends State<CreateClass> {
       'number': _classNumberController.text,
       'name': _classNameController.text,
       'code': newClassCode,
+      'teacher': FirebaseAuth.instance.currentUser!.uid, // Set the teacher field to the logged-in user's ID
       'students': [], // Initialize an empty list of students
     });
 

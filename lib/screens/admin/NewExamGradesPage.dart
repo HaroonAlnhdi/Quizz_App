@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class NewExamGradesPage extends StatelessWidget {
@@ -9,88 +9,86 @@ class NewExamGradesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Updated Exam Grades'),
+        title: const Text('Updated Exam'),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('classes').snapshots(),
-        builder: (context, classesSnapshot) {
-          if (classesSnapshot.connectionState == ConnectionState.waiting) {
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: getClasses(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (!classesSnapshot.hasData || classesSnapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No Classes Available"));
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No classes found.'));
+          }
+
+          var classes = snapshot.data!;
           return ListView.builder(
-            itemCount: classesSnapshot.data!.docs.length,
+            itemCount: classes.length,
             itemBuilder: (context, index) {
-              var classData = classesSnapshot.data!.docs[index];
-              String className = classData['name'];
-              String classNumber = classData['number'];
-              List studentIds = List.from(classData['students']);
-
-              return ExpansionTile(
-                title: Text('$className - $classNumber'),
-                children: [
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: _fetchStudents(studentIds),
-                    builder: (context, studentsSnapshot) {
-                      if (studentsSnapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (!studentsSnapshot.hasData || studentsSnapshot.data!.isEmpty) {
-                        return const Center(child: Text("No Students Available"));
-                      }
-
-                      var students = studentsSnapshot.data!;
-                      return FutureBuilder(
-                        future: _fetchExamsForClass(classData.id),
-                        builder: (context, examSnapshot) {
-                          if (examSnapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-
-                          if (!examSnapshot.hasData || examSnapshot.data!.docs.isEmpty) {
-                            return const Center(child: Text("No Exams Available"));
-                          }
-
-                          return Column(
-                            children: List.generate(examSnapshot.data!.docs.length, (examIndex) {
-                              var examData = examSnapshot.data!.docs[examIndex];
-                              String examTitle = examData['title'];
-
-                              return ExpansionTile(
-                                title: Text(examTitle),
-                                children: List.generate(students.length, (studentIndex) {
-                                  var student = students[studentIndex];
-                                  String studentId = student['id'];
-                                  String studentName = "${student['firstName']} ${student['lastName']}";
-
-                                  return FutureBuilder<Map?>(
-                                    future: _fetchStudentGradeForExam(studentId, examData.id),
-                                    builder: (context, gradeSnapshot) {
-                                      if (gradeSnapshot.connectionState == ConnectionState.waiting) {
-                                        return const Center(child: CircularProgressIndicator());
-                                      }
-
-                                      String grade = gradeSnapshot.data?['grade'] ?? 'No Grade';
-                                      return ListTile(
-                                        title: Text(studentName),
-                                        subtitle: Text('Grade: $grade'),
-                                      );
-                                    },
-                                  );
-                                }),
-                              );
-                            }),
-                          );
-                        },
-                      );
-                    },
+              var classData = classes[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: ExpansionTile(
+                  title: Text(
+                    classData['name'] ?? 'Unnamed Class',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                ],
+                  subtitle: Text(
+                    'Number: ${classData['number'] ?? 'N/A'}, Code: ${classData['code'] ?? 'N/A'}',
+                  ),
+                  children: [
+                    FutureBuilder<List<Map<String, dynamic>>>( 
+                      future: getExams(classData['id']),
+                      builder: (context, ExamSnapshot) {
+                        if (ExamSnapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+
+                        if (ExamSnapshot.hasError) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text('Error: ${ExamSnapshot.error}'),
+                          );
+                        }
+
+                        if (!ExamSnapshot.hasData || ExamSnapshot.data!.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Text('No exams found.'),
+                          );
+                        }
+
+                        var exams = ExamSnapshot.data!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: exams.map((exam) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${exam['title']}',
+                                      textAlign: TextAlign.left,
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                  // Fetch and show grade here
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               );
             },
           );
@@ -99,36 +97,76 @@ class NewExamGradesPage extends StatelessWidget {
     );
   }
 
-  // Fetch exams for a specific class
-  Future<QuerySnapshot> _fetchExamsForClass(String classId) {
-    return FirebaseFirestore.instance
-        .collection('Exams')
-        .where('class', isEqualTo: classId)
-        .get();
+  Future<List<Map<String, dynamic>>> getClasses() async {
+    List<Map<String, dynamic>> classes = [];
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      print('No user is logged in.');
+      return classes;
+    }
+
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('classes')
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        var code = doc['code'] ?? 'No Code'; // Default value if no code
+        classes.add({
+          'id': doc.id,
+          'code': code,
+          'name': doc['name'] ?? 'Unnamed Class',
+          'number': doc['number'] ?? 'N/A',
+          'students': doc['students'] ?? [],
+        });
+      }
+    } catch (e) {
+      print('Error fetching classes: $e');
+    }
+    return classes;
   }
 
-  // Fetch student grade for a specific exam
-  Future<Map?> _fetchStudentGradeForExam(String studentId, String examId) async {
-    var answerSnapshot = await FirebaseFirestore.instance
-        .collection('Answers')
-        .where('user', isEqualTo: studentId)
-        .where('exam', isEqualTo: examId)
-        .get();
+  Future<List<Map<String, dynamic>>> getExams(String? classCode) async {
+    List<Map<String, dynamic>> exams = [];
 
-    if (answerSnapshot.docs.isEmpty) return null;
-    return answerSnapshot.docs.first.data() as Map;
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Exams')
+          .where('class', isEqualTo: classCode)
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        exams.add({
+          'title': doc['title'],
+          'id': doc.id,
+          'class': doc['class'],
+        });
+      }
+    } catch (e) {
+      print('Error fetching exams: $e');
+    }
+    return exams;
   }
 
-  // Fetch student details based on student IDs
-  Future<List<Map<String, dynamic>>> _fetchStudents(List studentIds) async {
-    var studentsSnapshot = await FirebaseFirestore.instance.collection('users').get();
-    return studentsSnapshot.docs
-        .where((doc) => studentIds.contains(doc.id))
-        .map((doc) => {
-              'id': doc.id,
-              'firstName': doc['firstName'],
-              'lastName': doc['lastName'],
-            })
-        .toList();
+  // Function to get grade for a student in a specific exam
+  Future<List<Map<String, String>>> getAnswers(String examCode) async {
+    List<Map<String, String>> grades = [];
+    try {
+      QuerySnapshot gradeQuery = await FirebaseFirestore.instance
+          .collection('grades')
+          .where('exam', isEqualTo: examCode)
+          .get();
+
+      for (var doc in gradeQuery.docs) {
+        grades.add({
+          'grade': doc['grade'],
+          'user': doc['user'],
+        });
+      }
+    } catch (e) {
+      print('Error fetching grades: $e');
+    }
+    return grades;
   }
 }

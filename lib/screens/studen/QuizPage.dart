@@ -63,7 +63,7 @@ class _QuizPageState extends State<QuizPage> {
     Answers['exam'] = widget.ExamId;
     Answers['grade'] = calculateGrade(questions);
     print(Answers);
-
+    
     FirebaseFirestore.instance.collection('Answers').add({'Answers': Answers,});
 
     Navigator.of(context).pop(); // Close the dialog
