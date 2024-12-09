@@ -52,7 +52,8 @@ class QuizsListPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ListTile(
-                        leading: const Icon(Icons.quiz, size: 40, color: Colors.blue),
+                        leading: const Icon(Icons.quiz,
+                            size: 40, color: Colors.blue),
                         title: Text(
                           doc['title'],
                           style: const TextStyle(
@@ -113,17 +114,20 @@ class QuizsListPage extends StatelessWidget {
                           const Icon(Icons.timer, color: Colors.grey),
                           const SizedBox(width: 5),
                           Expanded(
-                            child: Text('Start: ${doc['startTime']} - End: ${doc['endTime']}'),
+                            child: Text(
+                                'Start: ${doc['startTime']} - End: ${doc['endTime']}'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.history_toggle_off, color: Colors.grey),
+                          const Icon(Icons.history_toggle_off,
+                              color: Colors.grey),
                           const SizedBox(width: 5),
                           Expanded(
-                            child: Text('Submission Limit: ${doc['submissionLimit']}'),
+                            child: Text(
+                                'Submission Limit: ${doc['submissionLimit']}'),
                           ),
                         ],
                       ),
@@ -133,13 +137,12 @@ class QuizsListPage extends StatelessWidget {
                           const Icon(Icons.calendar_today, color: Colors.grey),
                           const SizedBox(width: 5),
                           Expanded(
-                            child: Text('Created At: ${doc['createdAt'].toDate()}'),
+                            child: Text(
+                                'Created At: ${doc['createdAt'].toDate()}'),
                           ),
                         ],
                       ),
-                      
                     ],
-                    
                   ),
                 ),
               );
@@ -147,17 +150,17 @@ class QuizsListPage extends StatelessWidget {
           );
         },
       ),
-     bottomSheet: Container(
+      bottomSheet: Container(
         width: double.infinity,
-        color: Color(0xFF7826b5), 
+        color: Color(0xFF7826b5),
         height: 50,
-        child:  TextButton.icon(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        label: const Text('Back', style: TextStyle(color: Colors.white)),
-      ),
+        child: TextButton.icon(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          label: const Text('Back', style: TextStyle(color: Colors.white)),
+        ),
       ),
     );
   }

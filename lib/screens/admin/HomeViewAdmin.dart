@@ -292,8 +292,6 @@ class _HomeViewAdminState extends State<HomeViewAdmin> {
                               ),
                             ),
                           ),
-                          )
-
                         ],
                       ),
                     ],

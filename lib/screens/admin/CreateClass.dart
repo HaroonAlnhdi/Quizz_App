@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:quiz_app/screens/admin/AdminAppBar.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter/services.dart'; // Import for clipboard
+import 'package:flutter/services.dart';
 
 class CreateClass extends StatefulWidget {
   const CreateClass({super.key});
@@ -61,9 +62,7 @@ class _CreateClassState extends State<CreateClass> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Class'),
-      ),
+      appBar: const AdminAppBar(title: 'Create Class'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -157,6 +156,18 @@ class _CreateClassState extends State<CreateClass> {
               ),
             ),
           ],
+        ),
+      ),
+      bottomSheet: Container(
+        width: double.infinity,
+        color: Color(0xFF7826b5),
+        height: 50,
+        child: TextButton.icon(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          label: const Text('Back', style: TextStyle(color: Colors.white)),
         ),
       ),
     );
@@ -272,6 +283,18 @@ class ClassDetailsPage extends StatelessWidget {
               ],
             );
           },
+        ),
+      ),
+      bottomSheet: Container(
+        width: double.infinity,
+        color: Color(0xFF7826b5),
+        height: 50,
+        child: TextButton.icon(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          label: const Text('Back', style: TextStyle(color: Colors.white)),
         ),
       ),
     );

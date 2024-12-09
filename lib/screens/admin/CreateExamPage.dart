@@ -99,24 +99,24 @@ class _CreateExamPageState extends State<CreateExamPage> {
   }
 
   void _editQuestion(int index) {
-  final question = _questions[index];
-  questionController.text = question['text'];
-  questionType = question['type'];
-  if (questionType == 'MCQ') {
-    optionAController.text = question['options'][0];
-    optionBController.text = question['options'][1];
-    optionCController.text = question['options'][2];
-    optionDController.text = question['options'][3];
-    correctOptionController.text = question['correctOption'];
-  } else if (questionType == 'Text') {
-    correctOptionController.text = question['correctOption'];
-  } else if (questionType == 'True/False') {
-    isTrue = question['correctOption'] == 'true';
+    final question = _questions[index];
+    questionController.text = question['text'];
+    questionType = question['type'];
+    if (questionType == 'MCQ') {
+      optionAController.text = question['options'][0];
+      optionBController.text = question['options'][1];
+      optionCController.text = question['options'][2];
+      optionDController.text = question['options'][3];
+      correctOptionController.text = question['correctOption'];
+    } else if (questionType == 'Text') {
+      correctOptionController.text = question['correctOption'];
+    } else if (questionType == 'True/False') {
+      isTrue = question['correctOption'] == 'true';
+    }
+    setState(() {
+      showForm = true;
+    });
   }
-  setState(() {
-    showForm = true;
-  });
-}
 
   Future<void> _selectTime(
       BuildContext context, TextEditingController controller) async {
@@ -327,53 +327,53 @@ class _CreateExamPageState extends State<CreateExamPage> {
                 Step(
                   title: const Text('Add Questions'),
                   content: Column(
-  children: [
-    ListView.builder(
-      shrinkWrap: true,
-      itemCount: _questions.length,
-      itemBuilder: (context, index) {
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: ListTile(
-            leading: CircleAvatar(
-              child: Text('${index + 1}'),
-            ),
-            title: Text(_questions[index]['text']),
-            subtitle: Text(
-              'Type: ${_questions[index]['type']}, Options: ${_questions[index]['options']?.join(', ')}',
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                     _editQuestion(index);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    setState(() {
-                      _questions.removeAt(index);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ),
-    const SizedBox(height: 16),
-    _buildQuestionForm(),
-    const SizedBox(height: 20),
-  ],
-),
+                    children: [
+                      ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _questions.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                child: Text('${index + 1}'),
+                              ),
+                              title: Text(_questions[index]['text']),
+                              subtitle: Text(
+                                'Type: ${_questions[index]['type']}, Options: ${_questions[index]['options']?.join(', ')}',
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () {
+                                      _editQuestion(index);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () {
+                                      setState(() {
+                                        _questions.removeAt(index);
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildQuestionForm(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                   isActive: _currentStep >= 1,
                   state:
                       _currentStep > 1 ? StepState.complete : StepState.indexed,

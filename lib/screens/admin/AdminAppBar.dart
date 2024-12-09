@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:quiz_app/screens/LoginView.dart';
+import 'package:quiz_app/screens/admin/NotifPage.dart'; //notif page
 
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  // Add this property to track unread notifications
 
-  const AdminAppBar({Key? key, required this.title}) : super(key: key);
+  const AdminAppBar({
+    Key? key,
+    required this.title,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +25,8 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
       actions: [
@@ -30,7 +36,10 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
             color: Colors.black,
             icon: Icon(Icons.notifications),
             onPressed: () {
-              // Handle notification action
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotifPage()),
+              );
             },
           ),
         ),
@@ -44,7 +53,7 @@ class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
             },
           ),
         ),
-         Padding(
+        Padding(
           padding: const EdgeInsets.symmetric(horizontal: 1.0),
           child: IconButton(
             color: Colors.black,
