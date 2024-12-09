@@ -69,7 +69,9 @@ class _QuizPageState extends State<QuizPage> {
               "${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}";
         });
       }
+
     });
+
   }
 
   Future<List<Map<String, dynamic>>> getExam() async {

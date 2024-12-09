@@ -48,6 +48,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
         .limit(1)
         .get();
 
+
     return answerSnapshot.docs.isNotEmpty;
   }
 
@@ -93,6 +94,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
           );
         },
       );
+
     }
   }
 
