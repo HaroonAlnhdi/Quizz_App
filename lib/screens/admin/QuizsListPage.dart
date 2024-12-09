@@ -115,7 +115,15 @@ class _QuizsListPageState extends State<QuizsListPage> {
                               trailing: PopupMenuButton(
                                 onSelected: (value) {
                                   if (value == 'edit') {
-                                    // Add your edit functionality here
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditQuizPage(
+                                          quizId: doc.id,
+                                          initialData: doc,
+                                        ),
+                                      ),
+                                    );
                                   } else if (value == 'delete') {
                                     FirebaseFirestore.instance
                                         .collection('Exams')
@@ -209,6 +217,151 @@ class _QuizsListPageState extends State<QuizsListPage> {
           },
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           label: const Text('Back', style: TextStyle(color: Colors.white)),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+class EditQuizPage extends StatefulWidget {
+  final String quizId;
+  final QueryDocumentSnapshot<Object?> initialData;
+
+  const EditQuizPage({super.key, required this.quizId, required this.initialData});
+
+  @override
+  State<EditQuizPage> createState() => _EditQuizPageState();
+}
+
+class _EditQuizPageState extends State<EditQuizPage> {
+  late TextEditingController titleController;
+  late TextEditingController descriptionController;
+  late TextEditingController submissionLimitController;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController(text: widget.initialData['title']);
+    descriptionController = TextEditingController(text: widget.initialData['description']);
+    submissionLimitController = TextEditingController(text: '${widget.initialData['submissionLimit']}');
+  }
+
+  void _updateQuiz() async {
+    await FirebaseFirestore.instance.collection('Exams').doc(widget.quizId).update({
+      'title': titleController.text,
+      'description': descriptionController.text,
+      'submissionLimit': int.tryParse(submissionLimitController.text) ?? 0,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Quiz updated successfully!')),
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Quiz'),
+        backgroundColor: Colors.purple.shade700,
+        elevation: 5,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title Field
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  labelStyle: TextStyle(color: Colors.purple.shade600),
+                  hintText: 'Enter quiz title',
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade700),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Description Field
+              TextField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  labelStyle: TextStyle(color: Colors.purple.shade600),
+                  hintText: 'Enter quiz description',
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade700),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Submission Limit Field
+              TextField(
+                controller: submissionLimitController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Submission Limit',
+                  labelStyle: TextStyle(color: Colors.purple.shade600),
+                  hintText: 'Enter submission limit',
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.purple.shade700),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Centered Save Changes Button
+              Center(
+                child:ElevatedButton(
+                    onPressed: _updateQuiz,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple.shade700, // Button color
+                      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 40), // Increase padding for bigger button
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Save Changes',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontFamily: 'Roboto',
+                      ),
+                    ),
+                  ),
+
+              ),
+            ],
+          ),
         ),
       ),
     );
