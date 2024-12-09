@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:quiz_app/screens/admin/NewExamGradesPage.dart';
+import 'package:quiz_app/screens/studen/QuizDegrees.dart';
 // import 'package:quiz_app/screens/studen/QuizzesPage.dart';
 
 import 'firebase_options.dart';
@@ -62,6 +63,7 @@ class MainApp extends StatelessWidget {
           return QuizPage(ExamId: examId);
         },
         '/newExamGrades': (context) => const NewExamGradesPage(),
+        '/studentGrades': (context) => const QuizDegrees(),
 
       },
     );

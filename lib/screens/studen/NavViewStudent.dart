@@ -83,7 +83,9 @@ class NavViewStudent extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.score, color: Color(0xFF7826B5)),
               title: const Text('Quiz Degrees', style: TextStyle(color: Color(0xFF7826B5), fontWeight: FontWeight.bold)),
-              onTap: () {},
+              onTap: () {
+                Navigator.pushNamed(context, '/studentGrades');
+              },
             ),
             ListTile(
             leading: const Icon(Icons.info, color: Color(0xFF7826B5)),

@@ -108,13 +108,16 @@ class _QuizPageState extends State<QuizPage> {
       .get();
   final questions = await _examFuture;
   final grade = calculateGrade(questions);
-
+ 
+  int totalPoint = questions.fold(0, (sum, question) => sum + (question['points'] as int));
   final submission = {
     'user': user.uid,
     'timestamp': FieldValue.serverTimestamp(),
     'exam': widget.ExamId,
     'grade': grade,
+    'totalPoint': totalPoint,
     'answers': _answers,
+
   };
 
   await FirebaseFirestore.instance.collection('Answers').add(submission);
@@ -132,8 +135,8 @@ void _showSuccessDialog(BuildContext context) {
         actions: [
           TextButton.icon(
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-              Navigator.of(context).pushReplacementNamed('/homeStudent'); // Navigate to home
+              Navigator.of(context).pop(); 
+              Navigator.of(context).pushReplacementNamed('/homeStudent'); 
             },
             icon: const Icon(Icons.check, color: Colors.green),
             label: const Text("OK"),
@@ -198,15 +201,26 @@ void _showSubmitConfirmationDialog(BuildContext context) {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.purple,
-        title: const Text('Quiz Page'),
+        title: Image.asset('assets/logo.png', height: 50),
         actions: [
-          Center(
-            child: Text(
-              _timeRemaining,
-              style: const TextStyle(fontSize: 20),
+        Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0), // Add margin
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer, color: Colors.white), // Add icon
+                  const SizedBox(width: 8), // Add space between icon and text
+                  Text(
+                    _timeRemaining,
+                    style: const TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ],
+              ),
             ),
-          ),
+          )
         ],
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -221,121 +235,131 @@ void _showSubmitConfirmationDialog(BuildContext context) {
           final questions = snapshot.data!;
           final currentQuestion = questions[_currentIndex];
 
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  "Question ${_currentIndex + 1} of ${questions.length}",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Expanded(
-                child: Padding(
+          return Container(
+            margin: EdgeInsets.all(1),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        currentQuestion['text'],
-                        style: const TextStyle(fontSize: 20),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      if (currentQuestion['type'] == 'True/False') ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _answers[currentQuestion['id']] = 'True';
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _answers[currentQuestion['id']] == 'True'
-                                    ? Colors.green
-                                    : Colors.grey,
-                              ),
-                              child: const Text('True'),
-                            ),
-                            const SizedBox(width: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _answers[currentQuestion['id']] = 'False';
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _answers[currentQuestion['id']] == 'False'
-                                    ? Colors.red
-                                    : Colors.grey,
-                              ),
-                              child: const Text('False'),
-                            ),
-                          ],
-                        ),
-                      ] else if (currentQuestion['type'] == 'MCQ') ...[
-                        Wrap(
-                          spacing: 10,
-                          children: (currentQuestion['options'] ?? [])
-                              .map<Widget>(
-                                (option) => ChoiceChip(
-                                  label: Text(option),
-                                  selected: _answers[currentQuestion['id']] == option,
-                                  onSelected: (selected) {
-                                    setState(() {
-                                      _answers[currentQuestion['id']] =
-                                          selected ? option : null;
-                                    });
-                                  },
-                                ),
-                              )
-                              .toList(),
-                        ),
-                      ] else if (currentQuestion['type'] == 'Text') ...[
-                        TextField(
-                          onChanged: (value) {
-                            setState(() {
-                              _answers[currentQuestion['id']] = value;
-                            });
-                          },
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            hintText: 'Enter your answer',
-                          ),
-                        ),
-                      ] else ...[
-                        Text('Unknown question type: ${currentQuestion['type']}'),
-                      ],
-                    ],
+                  child: Text(
+                    "Question ${_currentIndex + 1} of ${questions.length}",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: _currentIndex > 0
-                        ? () => setState(() => _currentIndex--)
-                        : null,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          currentQuestion['text'],
+                          style: const TextStyle(fontSize: 20 , fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        if (currentQuestion['type'] == 'True/False') ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _answers[currentQuestion['id']] = 'True';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _answers[currentQuestion['id']] == 'True'
+                                      ? Colors.green
+                                      : Colors.white,
+                                ),
+                                child: const Text('True'),
+                              ),
+                              const SizedBox(width: 20),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _answers[currentQuestion['id']] = 'False';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _answers[currentQuestion['id']] == 'False'
+                                      ? Colors.red
+                                      :  Colors.white,
+                                ),
+                                child: const Text('False'),
+                              ),
+                            ],
+                          ),
+                        ] else if (currentQuestion['type'] == 'MCQ') ...[
+                          Wrap(
+                            spacing: 10,
+                            children: (currentQuestion['options'] ?? [])
+                                .map<Widget>(
+                                  (option) => ChoiceChip(
+                                    label: Text(option),
+                                    selected: _answers[currentQuestion['id']] == option,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        _answers[currentQuestion['id']] =
+                                            selected ? option : null;
+                                      });
+                                    },
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ] else if (currentQuestion['type'] == 'Text') ...[
+                          TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                _answers[currentQuestion['id']] = value;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Enter your answer',
+                            ),
+                          ),
+                        ] else ...[
+                          Text('Unknown question type: ${currentQuestion['type']}'),
+                        ],
+                      ],
+                    ),
                   ),
-                  if (_currentIndex == questions.length - 1)
-                  ElevatedButton(
-                        onPressed: () {
-                          _showSubmitConfirmationDialog(context);
-                        },
-                        child: const Text("Submit"),
-                      ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward),
-                    onPressed: _currentIndex < questions.length - 1
-                        ? () => setState(() => _currentIndex++)
-                        : null,
-                  ),
-                ],
-              ),
-            ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back , color: Colors.purple , size: 50),
+                      onPressed: _currentIndex > 0
+                          ? () => setState(() => _currentIndex--)
+                          : null,
+                    ),
+                    if (_currentIndex == questions.length - 1)
+                    ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                          ),
+                          onPressed: () {
+                            _showSubmitConfirmationDialog(context);
+                          },
+                          child: const Text("Submit" , style: TextStyle(fontSize: 20 , color: Colors.white)),
+                        ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward , color: Colors.purple , size: 50),
+                      onPressed: _currentIndex < questions.length - 1
+                          ? () => setState(() => _currentIndex++)
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           );
         },
       ),

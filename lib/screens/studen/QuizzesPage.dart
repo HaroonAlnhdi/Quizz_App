@@ -74,9 +74,9 @@ class _QuizzesPageState extends State<QuizzesPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Start Quiz'),
+            title: const Text('Start Quiz' , style: TextStyle(color: Colors.purple)),
             content: const Text(
-                'Are you sure you want to start the quiz? Once started, you cannot go back.'),
+                'Are you sure you want to start the quiz? Once started, you cannot go back.' , style: TextStyle(color: Colors.black)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -87,7 +87,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                   Navigator.pop(context);
                   Navigator.pushNamed(context, '/quizPage', arguments: quizId);
                 },
-                child: const Text('Start'),
+                child: const Text('Start' , style: TextStyle(color: Colors.purple , fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -156,7 +156,7 @@ bool _isQuizAccessible(Map<String, dynamic> quiz) {
               onPressed: () {}, icon: const Icon(Icons.notifications, color: Colors.white)),
           IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
-            onPressed: () async {
+            onPressed: ()  {
               Navigator.of(context).pop();
             },
           ),
