@@ -1,173 +1,280 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:quiz_app/screens/studen/QuizzesPage.dart';
+import 'dart:async';
 
-class HomeViewStudent extends StatefulWidget {
-  const HomeViewStudent({Key? key}) : super(key: key);
+class QuizPage extends StatefulWidget {
+  final String examId;
+
+  const QuizPage({Key? key, required this.examId}) : super(key: key);
 
   @override
-  State<HomeViewStudent> createState() => _HomeViewStudentState();
+  _QuizPageState createState() => _QuizPageState();
 }
 
-class _HomeViewStudentState extends State<HomeViewStudent> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+class _QuizPageState extends State<QuizPage> {
+  late Future<List<Map<String, dynamic>>> _examFuture;
+  late Timer _timer;
+  Duration _remainingTime = Duration.zero;
+  bool _isTimeOver = false;
 
-  Future<List<Map<String, dynamic>>> _getStudentClasses() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      QuerySnapshot classSnapshot = await _firestore
-          .collection('classes')
-          .where('students', arrayContains: user.uid)
-          .get();
-      return classSnapshot.docs
-          .map((doc) => {...(doc.data() as Map<String, dynamic>), 'id': doc.id})
-          .toList();
+  final TextEditingController _controller = TextEditingController();
+  final Map<String, dynamic> _answers = {};
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _examFuture = getExam();
+    _initializeTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeTimer() async {
+    final exam = await FirebaseFirestore.instance
+        .collection('Exams')
+        .doc(widget.examId)
+        .get();
+
+    if (exam.exists) {
+      final data = exam.data()!;
+      final startTime = DateTime.parse("${data['quizDate']} ${data['startTime']}");
+      final endTime = DateTime.parse("${data['quizDate']} ${data['endTime']}");
+      _remainingTime = endTime.difference(DateTime.now());
+
+      if (_remainingTime.isNegative) {
+        setState(() {
+          _isTimeOver = true;
+        });
+        return;
+      }
+
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          if (_remainingTime.inSeconds > 0) {
+            _remainingTime -= const Duration(seconds: 1);
+          } else {
+            _isTimeOver = true;
+            _timer.cancel();
+            submitForReal(); // Auto-submit when time ends
+          }
+        });
+      });
     }
-    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getExam() async {
+    final examSnapshot = await FirebaseFirestore.instance
+        .collection('Exams')
+        .doc(widget.examId)
+        .get();
+
+    if (!examSnapshot.exists || examSnapshot.data()?['questions'] == null) {
+      throw Exception('Exam not found or missing questions field.');
+    }
+
+    final questions = List<String>.from(examSnapshot.data()?['questions'] ?? []);
+    final questionDocs = await Future.wait(
+      questions.map((questionId) async {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('Questions')
+            .where('id', isEqualTo: questionId)
+            .get();
+
+        return querySnapshot.docs.isNotEmpty
+            ? querySnapshot.docs.first.data()
+            : throw Exception('Question not found for ID: $questionId');
+      }),
+    );
+
+    if (examSnapshot.data()?['isRandom'] == true) {
+      questionDocs.shuffle();
+    }
+
+    return questionDocs;
+  }
+
+  void submitForReal() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in.');
+    }
+
+    final examData = await _examFuture;
+    final grade = calculateGrade(examData);
+
+    final submission = {
+      'user': user.uid,
+      'timestamp': FieldValue.serverTimestamp(),
+      'exam': widget.examId,
+      'grade': grade,
+      'submitted': 1,
+      'answers': _answers,
+    };
+
+    await FirebaseFirestore.instance.collection('Answers').add(submission);
+
+    Navigator.of(context).pushReplacementNamed('/homeStudent');
+  }
+
+  double calculateGrade(List<Map<String, dynamic>> questions) {
+    int totalPoints = 0;
+    int obtainedPoints = 0;
+
+    for (final question in questions) {
+      final id = question['id'];
+      final correctOption = question['correctOption'];
+      final points = (question['points'] ?? 0) as int;
+
+      if (question['type'] != 'Text' &&
+          _answers[id] != null &&
+          _answers[id] == correctOption) {
+        obtainedPoints += points;
+      }
+
+      if (question['type'] != 'Text') {
+        totalPoints += points;
+      }
+    }
+
+    return (totalPoints > 0) ? (obtainedPoints / totalPoints) * 10 : 0;
+  }
+
+  void _goToNextQuestion(int totalQuestions) {
+    if (_currentIndex < totalQuestions - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+    }
+  }
+
+  void _goToPreviousQuestion() {
+    if (_currentIndex > 0) {
+      setState(() {
+        _currentIndex--;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Student Classes"),
         backgroundColor: Colors.purple,
+        title: const Text('Quiz Page'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: FirebaseAuth.instance.signOut,
+          ),
+        ],
       ),
-      body: 
-      
-      FutureBuilder<List<Map<String, dynamic>>>(
-        future: _getStudentClasses(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _examFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError || snapshot.data == null) {
-            return const Center(child: Text("Error fetching classes."));
-          } else {
-            final classes = snapshot.data!;
-            if (classes.isEmpty) {
-              return const Center(
-                child: Text(
-                  "No classes found.",
-                  style: TextStyle(fontSize: 18),
-                ),
-              );
-            }
+          }
 
-            return ListView.builder(
-              itemCount: classes.length,
-              itemBuilder: (BuildContext context, int index) {
-                final classInfo = classes[index];
-                return InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => ClassDetailPage(
-                        heroTag: index,
-                        classInfo: classInfo,
-                      ),
-                    ));
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        Hero(
-                          tag: index,
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.purple.shade100,
-                            child: const Icon(Icons.class_, size: 40, color: Colors.purple),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                classInfo['name'] ?? 'Class Name',
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                              Text(
-                                'Course Number: ${classInfo['number'] ?? 'N/A'}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+          if (!snapshot.hasData || snapshot.data!.isEmpty || _isTimeOver) {
+            return const Center(
+              child: Text("No quizzes available or time is over."),
             );
           }
-        },
-      ),
-    );
-  }
-}
 
-class ClassDetailPage extends StatelessWidget {
-  final int heroTag;
-  final Map<String, dynamic> classInfo;
+          final questions = snapshot.data!;
+          final currentQuestion = questions[_currentIndex];
 
-  const ClassDetailPage({Key? key, required this.heroTag, required this.classInfo}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(classInfo['name'] ?? "Class Details")),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Hero(
-                tag: heroTag,
-                child: CircleAvatar(
-                  radius: 80,
-                  backgroundColor: Colors.purple.shade100,
-                  child: const Icon(Icons.class_, size: 80, color: Colors.purple),
+          return Column(
+            children: [
+              // Timer
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  "Time Remaining: ${_remainingTime.inMinutes}:${_remainingTime.inSeconds % 60}",
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+              // Current Question
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      currentQuestion['text'],
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Answer Options
+                    if (currentQuestion['type'] == 'MCQ' ||
+                        currentQuestion['type'] == 'True/False')
+                      Wrap(
+                        spacing: 10,
+                        children: (currentQuestion['options'] ?? [])
+                            .map<Widget>((option) => ChoiceChip(
+                                  label: Text(option),
+                                  selected: _answers[currentQuestion['id']] == option,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _answers[currentQuestion['id']] = selected ? option : null;
+                                    });
+                                  },
+                                ))
+                            .toList(),
+                      ),
+
+                    if (currentQuestion['type'] == 'Text')
+                      TextField(
+                        controller: TextEditingController(
+                            text: _answers[currentQuestion['id']] ?? ''),
+                        onChanged: (value) {
+                          setState(() {
+                            _answers[currentQuestion['id']] = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Enter your answer',
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Navigation Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Class Name: ${classInfo['name'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.titleLarge,
+                  IconButton(
+                    onPressed: _goToPreviousQuestion,
+                    icon: const Icon(Icons.arrow_back),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Course Number: ${classInfo['number'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  ElevatedButton(
+                    onPressed: submitForReal,
+                    child: const Text('Submit'),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Class Code: ${classInfo['code'] ?? 'N/A'}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => QuizzesPage(classId: classInfo['id']),
-                      ));
-                    },
-                    icon: const Icon(Icons.quiz),
-                    label: const Text('View Quizzes'),
+                  IconButton(
+                    onPressed: () => _goToNextQuestion(questions.length),
+                    icon: const Icon(Icons.arrow_forward),
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

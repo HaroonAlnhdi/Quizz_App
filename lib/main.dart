@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:quiz_app/screens/admin/NewExamGradesPage.dart';
-import 'package:quiz_app/screens/studen/QuizzesPage.dart';
+// import 'package:quiz_app/screens/studen/QuizzesPage.dart';
 
 import 'firebase_options.dart';
 
@@ -15,13 +15,13 @@ import 'package:quiz_app/screens/admin/HomeViewAdmin.dart';
 import 'package:quiz_app/Auth.dart';
 
 import 'package:quiz_app/screens/admin/CreateClass.dart';
-import 'package:quiz_app/screens/admin/NotifPage.dart'; //notif page
+// import 'package:quiz_app/screens/admin/NotifPage.dart'; //notif page
 
 //student
 
 
 import 'package:quiz_app/screens/studen/HomeViewStudent.dart';
-import 'package:quiz_app/screens/studen/QuizPage.dart';
+// import 'package:quiz_app/screens/studen/QuizPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

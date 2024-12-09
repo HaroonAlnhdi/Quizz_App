@@ -98,12 +98,12 @@ class _QuizzesPageState extends State<QuizzesPage> {
 
 bool _isQuizAccessible(Map<String, dynamic> quiz) {
   DateTime now = DateTime.now(); // Current date and time in local timezone
-  print("Current time: $now"); // Debugging: Log the current time
+  // print("Current time: $now"); // Debugging: Log the current time
 
   try {
     // Parse quiz date
     DateTime quizDate = DateTime.parse(quiz['quizDate']).toLocal();  // Convert to local time
-    print("Quiz date: $quizDate");
+    // print("Quiz date: $quizDate");
 
     // Parse start and end times
     List<String> startParts = quiz['startTime'].split(":");
@@ -127,14 +127,14 @@ bool _isQuizAccessible(Map<String, dynamic> quiz) {
     );
 
     // Debugging: log the comparisons
-    print("Quiz start: $quizStart");
-    print("Quiz end: $quizEnd");
-    print("Is current time after quiz start? ${now.isAfter(quizStart)}");
-    print("Is current time before quiz end? ${now.isBefore(quizEnd)}");
+    // print("Quiz start: $quizStart");
+    // print("Quiz end: $quizEnd");
+    // print("Is current time after quiz start? ${now.isAfter(quizStart)}");
+    // print("Is current time before quiz end? ${now.isBefore(quizEnd)}");
 
     return now.isAfter(quizStart) && now.isBefore(quizEnd);
   } catch (e) {
-    print("Error in parsing date or time: $e");
+    // print("Error in parsing date or time: $e");
     return false;
   }
 }
