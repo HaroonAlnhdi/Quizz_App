@@ -69,9 +69,7 @@ class _QuizPageState extends State<QuizPage> {
               "${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}";
         });
       }
-
     });
-
   }
 
   Future<List<Map<String, dynamic>>> getExam() async {
@@ -98,107 +96,118 @@ class _QuizPageState extends State<QuizPage> {
     );
   }
 
-
   void submitForReal() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    throw Exception('User not found.');
-  }
-  final examSnapshot = await FirebaseFirestore.instance
-      .collection('Exams')
-      .doc(widget.ExamId)
-      .get();
-  final questions = await _examFuture;
-  final grade = calculateGrade(questions);
- 
-  int totalPoint = questions.fold(0, (sum, question) => sum + (question['points'] as int));
-  final submission = {
-    'user': user.uid,
-    'timestamp': FieldValue.serverTimestamp(),
-    'exam': widget.ExamId,
-    'grade': grade,
-    'totalPoint': totalPoint,
-    'answers': _answers,
-
-  };
-
-  await FirebaseFirestore.instance.collection('Answers').add(submission);
-
-  _showSuccessDialog(context);
-}
-
-void _showSuccessDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text("Submission Successful"),
-        content: const Text("Your quiz has been submitted successfully."),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop(); 
-              Navigator.of(context).pushReplacementNamed('/homeStudent'); 
-            },
-            icon: const Icon(Icons.check, color: Colors.green),
-            label: const Text("OK"),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.green,
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-  double calculateGrade(List<Map<String, dynamic>> questions) {
-    var correct = 0;
-    for (var question in questions) {
-      if (question['type'] == 'MCQ' || question['type'] == 'True/False') {
-        final correctOption = question['correctOption'];
-        if (_answers[question['id']] == correctOption) {
-          correct += question['points'] as int? ?? 0;
-        }
-      }
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not found.');
     }
-    return correct.toDouble();
+    final examSnapshot = await FirebaseFirestore.instance
+        .collection('Exams')
+        .doc(widget.ExamId)
+        .get();
+    final questions = await _examFuture;
+    final grade = calculateGrade(questions);
+
+    int totalPoint =
+        questions.fold(0, (sum, question) => sum + (question['points'] as int));
+    final submission = {
+      'user': user.uid,
+      'timestamp': FieldValue.serverTimestamp(),
+      'exam': widget.ExamId,
+      'grade': grade,
+      'totalPoint': totalPoint,
+      'answers': _answers,
+    };
+
+    await FirebaseFirestore.instance.collection('Answers').add(submission);
+
+    _showSuccessDialog(context);
   }
 
-void _showSubmitConfirmationDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text("Submit Quiz"),
-        content: const Text("Are you sure you want to submit the quiz?"),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop(); 
-            },
-            icon: const Icon(Icons.cancel, color: Colors.red),
-            label: const Text("Cancel"),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Submission Successful"),
+          content: const Text("Your quiz has been submitted successfully."),
+          actions: [
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushReplacementNamed('/homeStudent');
+              },
+              icon: const Icon(Icons.check, color: Colors.green),
+              label: const Text("OK"),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+              ),
             ),
-          ),
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop(); 
-              submitForReal(); 
-            },
-            icon: const Icon(Icons.check, color: Colors.green),
-            label: const Text("Submit"),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.green,
+          ],
+        );
+      },
+    );
+  }
+
+  int calculateGrade(List<Map<String, dynamic>> questions) {
+    return questions.fold<int>(
+      0,
+      (sum, question) {
+        final answer = _answers[question['id']];
+        if (answer == null) {
+          return sum;
+        }
+        if (question['type'] == 'True/False') {
+          return sum +
+              (question['answer'] == answer ? (question['points'] as int) : 0);
+        } else if (question['type'] == 'MCQ') {
+          return sum +
+              (question['answer'] == answer ? (question['points'] as int) : 0);
+        } else if (question['type'] == 'Text') {
+          return sum +
+              (question['answer'] == answer ? (question['points'] as int) : 0);
+        } else {
+          return sum;
+        }
+      },
+    );
+  }
+
+  void _showSubmitConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Submit Quiz"),
+          content: const Text("Are you sure you want to submit the quiz?"),
+          actions: [
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.cancel, color: Colors.red),
+              label: const Text("Cancel"),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
             ),
-          ),
-        ],
-      );
-    },
-  );
-}
+            TextButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                submitForReal();
+              },
+              icon: const Icon(Icons.check, color: Colors.green),
+              label: const Text("Submit"),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.green,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,7 +216,7 @@ void _showSubmitConfirmationDialog(BuildContext context) {
         backgroundColor: Colors.purple,
         title: Image.asset('assets/logo.png', height: 50),
         actions: [
-        Center(
+          Center(
             child: Padding(
               padding: const EdgeInsets.all(8.0), // Add margin
               child: Row(
@@ -249,7 +258,8 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     "Question ${_currentIndex + 1} of ${questions.length}",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(
@@ -259,7 +269,8 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                       children: [
                         Text(
                           currentQuestion['text'],
-                          style: const TextStyle(fontSize: 20 , fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
@@ -274,9 +285,10 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                                   });
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: _answers[currentQuestion['id']] == 'True'
-                                      ? Colors.green
-                                      : Colors.white,
+                                  backgroundColor:
+                                      _answers[currentQuestion['id']] == 'True'
+                                          ? Colors.green
+                                          : Colors.white,
                                 ),
                                 child: const Text('True'),
                               ),
@@ -288,9 +300,10 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                                   });
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: _answers[currentQuestion['id']] == 'False'
-                                      ? Colors.red
-                                      :  Colors.white,
+                                  backgroundColor:
+                                      _answers[currentQuestion['id']] == 'False'
+                                          ? Colors.red
+                                          : Colors.white,
                                 ),
                                 child: const Text('False'),
                               ),
@@ -303,7 +316,8 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                                 .map<Widget>(
                                   (option) => ChoiceChip(
                                     label: Text(option),
-                                    selected: _answers[currentQuestion['id']] == option,
+                                    selected: _answers[currentQuestion['id']] ==
+                                        option,
                                     onSelected: (selected) {
                                       setState(() {
                                         _answers[currentQuestion['id']] =
@@ -327,7 +341,8 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                             ),
                           ),
                         ] else ...[
-                          Text('Unknown question type: ${currentQuestion['type']}'),
+                          Text(
+                              'Unknown question type: ${currentQuestion['type']}'),
                         ],
                       ],
                     ),
@@ -337,23 +352,27 @@ void _showSubmitConfirmationDialog(BuildContext context) {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back , color: Colors.purple , size: 50),
+                      icon: const Icon(Icons.arrow_back,
+                          color: Colors.purple, size: 50),
                       onPressed: _currentIndex > 0
                           ? () => setState(() => _currentIndex--)
                           : null,
                     ),
                     if (_currentIndex == questions.length - 1)
-                    ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                          ),
-                          onPressed: () {
-                            _showSubmitConfirmationDialog(context);
-                          },
-                          child: const Text("Submit" , style: TextStyle(fontSize: 20 , color: Colors.white)),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
                         ),
+                        onPressed: () {
+                          _showSubmitConfirmationDialog(context);
+                        },
+                        child: const Text("Submit",
+                            style:
+                                TextStyle(fontSize: 20, color: Colors.white)),
+                      ),
                     IconButton(
-                      icon: const Icon(Icons.arrow_forward , color: Colors.purple , size: 50),
+                      icon: const Icon(Icons.arrow_forward,
+                          color: Colors.purple, size: 50),
                       onPressed: _currentIndex < questions.length - 1
                           ? () => setState(() => _currentIndex++)
                           : null,
@@ -368,5 +387,3 @@ void _showSubmitConfirmationDialog(BuildContext context) {
     );
   }
 }
-
-
